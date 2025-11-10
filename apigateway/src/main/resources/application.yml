@@ -1,0 +1,54 @@
+server:
+  port: 8080
+
+spring:
+  main:
+    web-application-type: reactive
+
+  application:
+    name: apigateway
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: authService
+              uri: http://localhost:8081
+              predicates:
+                - Path=/auth/**
+
+            - id: userService
+              uri: http://localhost:8082
+              predicates:
+                - Path=/users/**
+
+            - id: productSeservice
+              uri: http://localhost:8083
+              predicates:
+                - Path=/products/**
+
+            - id: cartService
+              uri: http://localhost:8084
+              predicates:
+                - Path=/carts/**
+
+            - id: orderService
+              uri: http://localhost:8085
+              predicates:
+                - Path=/orders/**
+
+            - id: billingService
+              uri: http://localhost:8086
+              predicates:
+                - Path=/billings/**
+
+            - id: reviewService
+              uri: http://localhost:8087
+              predicates:
+                - Path=/reviews/**

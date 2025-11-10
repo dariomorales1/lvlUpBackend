@@ -1,13 +1,13 @@
-package cl.levelup.securityservice;
+package cl.levelup.apigateway;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class SecurityServiceApplication {
+public class ApigatewayApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(SecurityServiceApplication.class, args);
+        SpringApplication.run(ApigatewayApplication.class, args);
     }
 
 }

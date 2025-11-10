@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>cl.levelup</groupId>
-    <artifactId>securityService</artifactId>
+    <artifactId>billingService</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>securityService</name>
-    <description>securityService</description>
+    <name>billingService</name>
+    <description>billingService</description>
     <url/>
     <licenses>
         <license/>

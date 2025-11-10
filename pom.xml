@@ -11,6 +11,7 @@
     <groupId>cl.levelup</groupId>
     <artifactId>LevelUpBackend</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
     <name>LevelUpBackend</name>
     <description>LevelUpBackend</description>
     <url/>
@@ -34,8 +35,9 @@
         <module>orderService</module>
         <module>reportService</module>
         <module>reviewService</module>
-        <module>securityService</module>
+        <module>billingService</module>
         <module>cartService</module>
+        <module>apigateway</module>
     </modules>
 
     <properties>
@@ -49,6 +51,17 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.3.0</version>
         </dependency>
 
         <dependency>

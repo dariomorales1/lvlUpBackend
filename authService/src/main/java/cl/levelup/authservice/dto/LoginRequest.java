@@ -1,0 +1,19 @@
+package cl.levelup.authservice.dto;
+
+import jakarta.validation.constraints.NotBlank;
+
+public class LoginRequest {
+
+    @NotBlank
+    private String usernameOrEmail;
+
+    @NotBlank
+    private String password;
+
+    public String getUsernameOrEmail() { return usernameOrEmail; }
+    public String getPassword() { return password; }
+
+    public void setUsernameOrEmail(String usernameOrEmail) { this.usernameOrEmail = usernameOrEmail; }
+    public void setPassword(String password) { this.password = password; }
+}
+
