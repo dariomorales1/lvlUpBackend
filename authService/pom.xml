@@ -50,13 +50,6 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Lombok (opcional) -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-
         <!-- Tests (opcional) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

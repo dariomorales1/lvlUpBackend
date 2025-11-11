@@ -28,7 +28,7 @@ spring:
               predicates:
                 - Path=/users/**
 
-            - id: productSeservice
+            - id: productService
               uri: http://localhost:8083
               predicates:
                 - Path=/products/**
