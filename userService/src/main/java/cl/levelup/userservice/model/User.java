@@ -1,43 +1,41 @@
 package cl.levelup.userservice.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 @Entity
 @Table(name = "users")
+@Getter
+@Setter
+@AllArgsConstructor
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(nullable = false, length = 120)
     private String email;
 
-    @Column(nullable = false)
-    private String password;
-
-    private String firstName;
-    private String lastName;
-
-    @Column(unique = true)
+    @Column(nullable = false, length = 60)
     private String username;
 
-    private String role = "USER";
+    @Column(nullable = false, length = 200)
+    private String passwordHash;
 
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    @Column(nullable = false)
+    private Boolean enabled = true;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-    }
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt = Instant.now();
 
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+    public User() {}
+
+    public User(String email, String username, String passwordHash) {
+        this.email = email;
+        this.username = username;
+        this.passwordHash = passwordHash;
     }
 }
