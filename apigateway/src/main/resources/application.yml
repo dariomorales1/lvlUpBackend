@@ -52,3 +52,8 @@ spring:
               uri: http://localhost:8087
               predicates:
                 - Path=/reviews/**
+
+            - id: fileService
+              uri: http://localhost:8088
+              predicates:
+                - Path=/file/**

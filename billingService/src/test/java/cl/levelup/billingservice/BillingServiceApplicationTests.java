@@ -1,10 +1,10 @@
-package cl.levelup.securityservice;
+package cl.levelup.billingservice;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class SecurityServiceApplicationTests {
+class BillingServiceApplicationTests {
 
     @Test
     void contextLoads() {
