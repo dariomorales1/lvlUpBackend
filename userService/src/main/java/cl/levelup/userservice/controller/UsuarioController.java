@@ -76,6 +76,7 @@ public class UsuarioController {
         r.setFechaNacimiento(u.getFechaNacimiento());
         r.setAvatarUrl(u.getAvatarUrl());
         r.setActivo(u.isActivo());
+        r.setRol(u.getRol());
         return r;
     }
 }

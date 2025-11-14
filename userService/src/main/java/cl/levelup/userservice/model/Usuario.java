@@ -33,6 +33,9 @@ public class Usuario {
     @Column(name = "actualizado_en", nullable = false)
     private OffsetDateTime actualizadoEn;
 
+    @Column(name = "rol", nullable = false)
+    private String rol = "USER";
+
     // ------- GETTERS & SETTERS -------
 
     public String getId() {
@@ -98,4 +101,8 @@ public class Usuario {
     public void setActualizadoEn(OffsetDateTime actualizadoEn) {
         this.actualizadoEn = actualizadoEn;
     }
+
+    public String getRol() { return rol; }
+
+    public void setRol(String rol) { this.rol = rol; }
 }

@@ -10,6 +10,7 @@ public class UsuarioResponse {
     private LocalDate fechaNacimiento;
     private String avatarUrl;
     private boolean activo;
+    private String rol;
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -28,4 +29,7 @@ public class UsuarioResponse {
 
     public boolean isActivo() { return activo; }
     public void setActivo(boolean activo) { this.activo = activo; }
+
+    public String getRol() { return rol; }
+    public void setRol(String rol) { this.rol = rol; }
 }
