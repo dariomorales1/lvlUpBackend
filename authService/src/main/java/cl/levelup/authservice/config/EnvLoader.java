@@ -1,4 +1,4 @@
-package cl.levelup.userservice.config;
+package cl.levelup.authservice.config;
 
 import org.springframework.context.annotation.Configuration;
 import jakarta.annotation.PostConstruct;
@@ -49,3 +49,4 @@ public class EnvLoader {
         }
     }
 }
+
