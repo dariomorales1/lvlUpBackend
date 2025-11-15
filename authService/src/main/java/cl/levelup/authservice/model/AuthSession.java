@@ -15,7 +15,6 @@ public class AuthSession {
     @Column(name = "user_id", nullable = false)
     private String userId;
 
-    // OJO: aquí va el HASH del refresh token
     @Column(name = "refresh_token", nullable = false)
     private String refreshToken;
 
@@ -37,8 +36,6 @@ public class AuthSession {
             createdAt = OffsetDateTime.now();
         }
     }
-
-    // ---------- GETTERS & SETTERS ----------
 
     public String getId() {
         return id;
