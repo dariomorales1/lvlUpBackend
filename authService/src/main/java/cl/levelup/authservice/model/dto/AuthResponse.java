@@ -1,18 +1,18 @@
 package cl.levelup.authservice.model.dto;
 
-import lombok.Getter;
-
-@Getter
 public class AuthResponse {
+    private String accessToken;
+    private String refreshToken;
+    private String tokenType;
+    private String userId;
+    private String email;
+    private String rol;
 
-    private final String accessToken;
-    private final String refreshToken;
-    private final String tokenType;
-    private final String userId;
-    private final String email;
-    private final String rol;
+    public AuthResponse() {
+    }
 
-    public AuthResponse(String accessToken, String refreshToken, String tokenType, String userId, String email, String rol) {
+    public AuthResponse(String accessToken, String refreshToken, String tokenType,
+                        String userId, String email, String rol) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
         this.tokenType = tokenType;
@@ -20,4 +20,22 @@ public class AuthResponse {
         this.email = email;
         this.rol = rol;
     }
+
+    public String getAccessToken() { return accessToken; }
+    public void setAccessToken(String accessToken) { this.accessToken = accessToken; }
+
+    public String getRefreshToken() { return refreshToken; }
+    public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
+
+    public String getTokenType() { return tokenType; }
+    public void setTokenType(String tokenType) { this.tokenType = tokenType; }
+
+    public String getUserId() { return userId; }
+    public void setUserId(String userId) { this.userId = userId; }
+
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+
+    public String getRol() { return rol; }
+    public void setRol(String rol) { this.rol = rol; }
 }
