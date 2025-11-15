@@ -12,29 +12,42 @@ spring:
       server:
         webflux:
           globalcors:
-            add-to-simple-url-handler-mapping: true
             cors-configurations:
               '[/**]':
-                allowedOrigins:
-                  - ${SITE_URL:http://levelup.ddns.net:3000}
-                allowedMethods:
+                allowed-origins:
+                  - "${SITE_URL:http://localhost:8080}"
+                  - "${SITE_URL:http://localhost:3000}"
+                  - "${SITE_URL:http://levelup.ddns.net:8080}"
+                  - "${SITE_URL:http://levelup.ddns.net}"
+                allowed-methods:
                   - GET
                   - POST
                   - PUT
                   - PATCH
                   - DELETE
                   - OPTIONS
-                allowedHeaders:
+                allowed-headers:
                   - Authorization
                   - Content-Type
                   - X-Requested-With
                   - Accept
-                exposedHeaders:
+                exposed-headers:
                   - Location
                   - Content-Disposition
-                allowCredentials: true
+                allow-credentials: true
 
           routes:
+            # Ruta para actuator del gateway mismo
+            - id: gateway-actuator
+              uri: http://localhost:8080
+              predicates:
+                - Path=/actuator/**
+              filters:
+                - name: RewritePath
+                  args:
+                    regexp: /actuator/(?<path>.*)
+                    replacement: /actuator/${path}
+
             - id: authService
               uri: http://localhost:8081
               predicates:
@@ -76,7 +89,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,gateway
+        include: health, info, gateway, routes
 
 logging:
   level:

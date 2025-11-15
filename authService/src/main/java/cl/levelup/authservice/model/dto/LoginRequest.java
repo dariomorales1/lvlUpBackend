@@ -1,9 +1,11 @@
 package cl.levelup.authservice.model.dto;
 
+import jakarta.validation.constraints.NotBlank;
+
 public class LoginRequest {
+
+    @NotBlank(message = "firebaseIdToken es requerido")
     private String firebaseIdToken;
-    private String email;
-    private String password;
 
     public String getFirebaseIdToken() {
         return firebaseIdToken;
@@ -12,22 +14,4 @@ public class LoginRequest {
     public void setFirebaseIdToken(String firebaseIdToken) {
         this.firebaseIdToken = firebaseIdToken;
     }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
 }
-
-
