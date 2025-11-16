@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
@@ -63,5 +65,16 @@ public class AuthController {
         public void setMessage(String message) {
             this.message = message;
         }
+    }
+
+    @DeleteMapping("/admin/delete-user")
+    public ResponseEntity<Void> deleteUserFromFirebase(@RequestBody Map<String, String> request) {
+        String userId = request.get("userId");
+        if (userId == null || userId.isEmpty()) {
+            throw new RuntimeException("Se requiere el ID del usuario");
+        }
+
+        authService.deleteUserFromFirebase(userId);
+        return ResponseEntity.noContent().build();
     }
 }

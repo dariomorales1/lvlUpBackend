@@ -18,6 +18,7 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/actuator/health").permitAll()
+                        .requestMatchers("/admin/delete-user").permitAll()
                         .anyRequest().authenticated()
                 );
 

@@ -17,7 +17,7 @@ public class EnvLoader {
         try {
             File envFile = new File(".env");
             if (!envFile.exists()) {
-                System.out.println("No existe archivo .env");
+                System.out.println("⚠️  No existe archivo .env - usando valores por defecto");
                 return;
             }
 
@@ -26,26 +26,35 @@ public class EnvLoader {
             try (BufferedReader reader = new BufferedReader(new FileReader(envFile))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
+                    line = line.trim();
+
+                    // Saltar comentarios y líneas vacías
+                    if (line.isEmpty() || line.startsWith("#")) continue;
                     if (!line.contains("=")) continue;
-                    if (line.trim().startsWith("#")) continue;
 
                     String[] parts = line.split("=", 2);
-                    envVars.put(parts[0].trim(), parts[1].trim());
+                    String key = parts[0].trim();
+                    String value = parts[1].trim();
+
+                    // Quitar comillas si existen
+                    if (value.startsWith("\"") && value.endsWith("\"")) {
+                        value = value.substring(1, value.length() - 1);
+                    }
+
+                    envVars.put(key, value);
+                    System.out.println("✅ ENV cargado: " + key + " = " + value);
                 }
             }
 
+            // Cargar variables al sistema
             for (Map.Entry<String, String> entry : envVars.entrySet()) {
-                String key = entry.getKey();
-                String value = entry.getValue();
-
-                System.setProperty(key, value);
-                System.out.println("ENV " + key + " cargado desde .env");
+                System.setProperty(entry.getKey(), entry.getValue());
             }
 
-            System.out.println("FIREBASE_SERVICE_ACCOUNT = " + System.getProperty("FIREBASE_SERVICE_ACCOUNT"));
+            System.out.println("✅ Archivo .env cargado exitosamente");
 
         } catch (Exception e) {
-            System.out.println("Error cargando .env: " + e.getMessage());
+            System.err.println("❌ Error cargando .env: " + e.getMessage());
         }
     }
 }

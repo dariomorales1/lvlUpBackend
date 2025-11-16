@@ -1,20 +1,27 @@
-package cl.levelup.userservice.model;
+package cl.levelup.userservice.model.dto;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 
-public class UsuarioResponse {
+public class UsuarioRequest {
 
-    private String id;
+    @Email
+    @NotBlank
     private String email;
+
+    @NotBlank
     private String nombre;
+
     private LocalDate fechaNacimiento;
     private String avatarUrl;
-    private boolean activo;
+
     private String rol;
+    private Boolean activo;
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
 
+    // ------- GETTERS & SETTERS -------
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
@@ -27,9 +34,9 @@ public class UsuarioResponse {
     public String getAvatarUrl() { return avatarUrl; }
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 
-    public boolean isActivo() { return activo; }
-    public void setActivo(boolean activo) { this.activo = activo; }
-
     public String getRol() { return rol; }
     public void setRol(String rol) { this.rol = rol; }
+
+    public Boolean getActivo() { return activo; }
+    public void setActivo(Boolean activo) { this.activo = activo; }
 }
