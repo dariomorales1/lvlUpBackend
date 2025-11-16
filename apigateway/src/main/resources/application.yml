@@ -37,7 +37,6 @@ spring:
                 allow-credentials: true
 
           routes:
-            # Ruta para actuator del gateway mismo
             - id: gateway-actuator
               uri: http://localhost:8080
               predicates:
