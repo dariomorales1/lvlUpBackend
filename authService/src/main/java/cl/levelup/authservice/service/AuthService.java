@@ -144,4 +144,28 @@ public class AuthService {
         System.out.println("🚪 Logout realizado para usuario: " + userId);
 
     }
+
+    public void deleteUserFromFirebase(String userId) {
+        try {
+            System.out.println("🗑️ Eliminando usuario de Firebase: " + userId);
+
+            FirebaseAuth.getInstance().deleteUser(userId);
+
+            System.out.println("✅ Usuario eliminado de Firebase: " + userId);
+
+        } catch (FirebaseAuthException e) {
+            System.err.println("❌ Error eliminando usuario de Firebase: " + e.getMessage());
+
+            if (e.getErrorCode().equals("user-not-found")) {
+                throw new RuntimeException("Usuario no encontrado en Firebase");
+            } else if (e.getErrorCode().equals("insufficient-permissions")) {
+                throw new RuntimeException("Permisos insuficientes para eliminar usuario");
+            } else {
+                throw new RuntimeException("Error eliminando usuario de Firebase: " + e.getMessage());
+            }
+        } catch (Exception e) {
+            System.err.println("❌ Error inesperado eliminando usuario: " + e.getMessage());
+            throw new RuntimeException("Error eliminando usuario: " + e.getMessage());
+        }
+    }
 }

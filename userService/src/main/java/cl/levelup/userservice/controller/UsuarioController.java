@@ -1,10 +1,11 @@
 package cl.levelup.userservice.controller;
 
-import cl.levelup.userservice.model.Usuario;
-import cl.levelup.userservice.model.UsuarioRequest;
-import cl.levelup.userservice.model.UsuarioResponse;
+import cl.levelup.userservice.model.dto.UsuarioPublicRequest;
+import cl.levelup.userservice.model.dto.UsuarioRequest;
+import cl.levelup.userservice.model.dto.UsuarioResponse;
 import cl.levelup.userservice.service.UsuarioService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -24,21 +25,18 @@ public class UsuarioController {
 
     @GetMapping
     public List<UsuarioResponse> getAll() {
-        return usuarioService.findAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
+        return usuarioService.findAll();
     }
 
     @GetMapping("/{id}")
     public UsuarioResponse getOne(@PathVariable("id") String id) {
-        return toResponse(usuarioService.findById(id));
+        return usuarioService.findById(id);
     }
 
     @GetMapping("/me")
     public UsuarioResponse getCurrentUser(Authentication auth) {
         String uid = (String) auth.getPrincipal();
-        return toResponse(usuarioService.findById(uid));
+        return usuarioService.findById(uid);
     }
 
     @PostMapping
@@ -47,11 +45,11 @@ public class UsuarioController {
             Authentication auth
     ) {
         String uid = (String) auth.getPrincipal();
-        Usuario creado = usuarioService.createFromRequest(request, uid);
+        UsuarioResponse creado = usuarioService.createFromRequest(request, uid);
 
         return ResponseEntity
                 .created(URI.create("/users/" + creado.getId()))
-                .body(toResponse(creado));
+                .body(creado);
     }
 
     @PutMapping("/{id}")
@@ -59,7 +57,7 @@ public class UsuarioController {
             @PathVariable("id") String id,
             @Valid @RequestBody UsuarioRequest request
     ) {
-        return toResponse(usuarioService.update(id, request));
+        return usuarioService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
@@ -68,15 +66,34 @@ public class UsuarioController {
         return ResponseEntity.noContent().build();
     }
 
-    private UsuarioResponse toResponse(Usuario u) {
-        UsuarioResponse r = new UsuarioResponse();
-        r.setId(u.getId());
-        r.setEmail(u.getEmail());
-        r.setNombre(u.getNombre());
-        r.setFechaNacimiento(u.getFechaNacimiento());
-        r.setAvatarUrl(u.getAvatarUrl());
-        r.setActivo(u.isActivo());
-        r.setRol(u.getRol());
-        return r;
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<ErrorResponse> handleRuntime(RuntimeException ex) {
+        ErrorResponse error = new ErrorResponse(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
+
+    public static class ErrorResponse {
+        private String message;
+
+        public ErrorResponse() { }
+
+        public ErrorResponse(String message) {
+            this.message = message;
+        }
+
+        public String getMessage() { return message; }
+        public void setMessage(String message) { this.message = message; }
+    }
+
+    @PostMapping("/public/register")
+    public ResponseEntity<UsuarioResponse> registerPublic(
+            @Valid @RequestBody UsuarioPublicRequest request
+    ) {
+        UsuarioResponse creado = usuarioService.createFromPublicRequest(request);
+        return ResponseEntity
+                .created(URI.create("/users/" + creado.getId()))
+                .body(creado);
+    }
+
+
 }
