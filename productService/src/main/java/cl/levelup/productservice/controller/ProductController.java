@@ -8,7 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/products")
@@ -25,7 +27,7 @@ public class ProductController {
     @GetMapping("/")
     public ResponseEntity<?> getAllProducts() {
 
-        List<Product> products = productService.findAll();
+        List<Product> products = productService.findAll().stream().sorted(Comparator.comparing(Product::getCodigo)).collect(Collectors.toList());
         return products.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(products);
     }
 
@@ -62,7 +64,6 @@ public class ProductController {
         }
     }
 
-    // Añadir update
 
     @PutMapping("/{productCode}")
     public ResponseEntity<MessageResponse> updateProduct(
