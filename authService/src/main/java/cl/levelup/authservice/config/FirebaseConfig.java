@@ -18,21 +18,19 @@ public class FirebaseConfig {
     @PostConstruct
     public void init() {
 
-        // DEBUG
         System.out.println("🔥 FIREBASE_SERVICE_ACCOUNT (raw) = " + serviceAccountPath);
         System.out.println("🔥 FIREBASE_SERVICE_ACCOUNT (system) = " + System.getProperty("FIREBASE_SERVICE_ACCOUNT"));
 
-        // Si Spring no lo captó, usamos System.getProperty cargado por EnvLoader
         if (serviceAccountPath == null || serviceAccountPath.isBlank()) {
             serviceAccountPath = System.getProperty("FIREBASE_SERVICE_ACCOUNT");
-            System.out.println("➡️ FIREBASE_SERVICE_ACCOUNT cargado desde System: " + serviceAccountPath);
+            System.out.println("FIREBASE_SERVICE_ACCOUNT cargado desde System: " + serviceAccountPath);
         }
 
         try {
             if (FirebaseApp.getApps().isEmpty()) {
 
                 if (serviceAccountPath == null || serviceAccountPath.isBlank()) {
-                    System.out.println("⚠️ FIREBASE_SERVICE_ACCOUNT no definido. Firebase NO se inicializa.");
+                    System.out.println("FIREBASE_SERVICE_ACCOUNT no definido. Firebase NO se inicializa.");
                     return;
                 }
 
@@ -43,7 +41,7 @@ public class FirebaseConfig {
                         .build();
 
                 FirebaseApp.initializeApp(options);
-                System.out.println("✅ Firebase inicializado correctamente.");
+                System.out.println("Firebase inicializado correctamente.");
             }
 
         } catch (Exception e) {
