@@ -43,16 +43,27 @@ public class ProductController {
 
     @PostMapping("/")
     public ResponseEntity<MessageResponse> addProduct(@RequestBody Product productRequest) {
-        Product existing = productService.findByCodigo(productRequest.getCodigo());
-        if (productRequest.getId() <= 0 && existing == null) {
-            String imgUrl = "http://levelup.ddns.net:8000/storage/v1/object/public/levelup_files/products/" + productRequest.getCategoria() + "/" + productRequest.getImagenUrl();
-            productRequest.setImagenUrl(imgUrl);
-            productService.add(productRequest);
-            return ResponseEntity.ok(new MessageResponse("Product added successfully"));
-        } else {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(new MessageResponse("Product already exists"));
+        System.out.println("Producto recibido: " + productRequest);
+        try {
+            Product existing = productService.findByCodigo(productRequest.getCodigo());
+            if (productRequest.getId() <= 0 && existing == null) {
+                String imgUrl = "http://levelup.ddns.net:8000/storage/v1/object/public/levelup_files/products/"
+                        + productRequest.getCategoria() + "/"
+                        + productRequest.getImagenUrl();
+                productRequest.setImagenUrl(imgUrl);
+
+                productService.add(productRequest);
+                return ResponseEntity.ok(new MessageResponse("Product added successfully"));
+            } else {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body(new MessageResponse("Product already exists"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace(); // Esto mostrará la causa exacta del 500
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error interno al agregar producto"));
         }
     }
+
 
     @DeleteMapping("/{productId}")
     public ResponseEntity<MessageResponse> deleteProduct(@PathVariable int productId) {
@@ -77,14 +88,29 @@ public class ProductController {
                     .body(new MessageResponse("Product doesn't exist"));
         }
 
-        if (productRequest.getImagenUrl() != null) {
-            String imgUrl = "http://levelup.ddns.net:8000/storage/v1/object/public/levelup_files/products/" + productRequest.getCategoria() + "/" + productRequest.getImagenUrl();
-            productRequest.setImagenUrl(imgUrl);
+        String baseUrl = "http://levelup.ddns.net:8000/storage/v1/object/public/levelup_files/products/";
+        String categoryPath = productRequest.getCategoria() + "/";
+
+        if (productRequest.getImagenUrl() != null && !productRequest.getImagenUrl().isEmpty()) {
+            String imagen = productRequest.getImagenUrl();
+
+            if (!imagen.startsWith(baseUrl + categoryPath)) {
+                productRequest.setImagenUrl(baseUrl + categoryPath + imagen);
+            } else {
+                productRequest.setImagenUrl(imagen);
+            }
         }
 
-        productService.update(existing, productRequest);
+        boolean isPartial = productService.isPartialUpdate(productRequest);
 
-        return ResponseEntity.ok(new MessageResponse("Product updated successfully"));
+        if (isPartial) {
+            productService.partialUpdate(existing, productRequest);
+            return ResponseEntity.ok(new MessageResponse("Product partially updated"));
+        } else {
+            productService.update(existing, productRequest);
+            return ResponseEntity.ok(new MessageResponse("Product fully updated"));
+        }
     }
+
 
 }
