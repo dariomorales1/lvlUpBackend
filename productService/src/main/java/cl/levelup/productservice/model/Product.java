@@ -3,6 +3,9 @@ package cl.levelup.productservice.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Data
 @Table(name = "products")
@@ -34,4 +37,7 @@ public class Product {
 
     @Column(nullable = false)
     private String imagenUrl;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductSpecification> especificaciones = new ArrayList<>();
 }
