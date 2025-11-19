@@ -40,8 +40,8 @@ public class ProductService {
         productRepository.save(productRequest);
     }
 
-    public void delete(int id) {
-        productRepository.deleteById(id);
+    public void delete(String codigo) {
+        productRepository.deleteByCodigo(codigo);
     }
 
     public void update(Product existing, Product data) {
