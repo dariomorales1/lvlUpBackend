@@ -78,14 +78,14 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .ifPresent(existing -> {
                     throw new RuntimeException("El email ya está en uso por otro usuario");
                 });
+
         usuario.setEmail(request.getEmail());
         usuario.setNombre(request.getNombre());
         usuario.setFechaNacimiento(request.getFechaNacimiento());
         usuario.setAvatarUrl(request.getAvatarUrl());
         usuario.setRol(request.getRol());
         usuario.setActivo(request.getActivo());
-
-
+        usuario.setActualizadoEn(OffsetDateTime.now());
 
         Usuario actualizado = usuarioRepository.save(usuario);
         return toResponse(actualizado);
@@ -136,4 +136,18 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario guardado = usuarioRepository.save(usuario);
         return toResponse(guardado);
     }
+
+    // ========= NUEVO: actualizar solo el avatar =========
+    @Override
+    public UsuarioResponse actualizarAvatar(String id, String avatarUrl) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        usuario.setAvatarUrl(avatarUrl);
+        usuario.setActualizadoEn(OffsetDateTime.now());
+
+        Usuario guardado = usuarioRepository.save(usuario);
+        return toResponse(guardado);
+    }
+    // ====================================================
 }

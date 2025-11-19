@@ -6,12 +6,16 @@ import cl.levelup.userservice.model.dto.UsuarioResponse;
 import cl.levelup.userservice.service.UsuarioService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import cl.levelup.userservice.model.dto.DireccionRequest;
 import cl.levelup.userservice.model.dto.DireccionResponse;
 import cl.levelup.userservice.service.DireccionService;
+import cl.levelup.userservice.storage.SupabaseStorageService;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.RequestPart;
 
 import java.net.URI;
 import java.util.List;
@@ -22,10 +26,16 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
     private final DireccionService direccionService;
+    private final SupabaseStorageService supabaseStorageService;
 
-    public UsuarioController(UsuarioService usuarioService, DireccionService direccionService) {
+    public UsuarioController(
+            UsuarioService usuarioService,
+            DireccionService direccionService,
+            SupabaseStorageService supabaseStorageService
+    ) {
         this.usuarioService = usuarioService;
         this.direccionService = direccionService;
+        this.supabaseStorageService = supabaseStorageService;
     }
 
     @GetMapping
@@ -70,6 +80,55 @@ public class UsuarioController {
         usuarioService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping(
+            path = "/{id}/avatar",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ResponseEntity<UsuarioResponse> uploadAvatar(
+            @PathVariable("id") String id,
+            @RequestPart("file") MultipartFile file,
+            Authentication auth
+    ) {
+
+        try {
+            // 1) Subir archivo a Supabase Storage -> URL pública
+            String publicUrl = supabaseStorageService.uploadAvatar(id, file);
+
+            // 2) Actualizar avatarUrl del usuario en la BD
+            UsuarioResponse actualizado = usuarioService.actualizarAvatar(id, publicUrl);
+
+            return ResponseEntity.ok(actualizado);
+        } catch (Exception e) {
+            throw new RuntimeException("Error al subir avatar: " + e.getMessage(), e);
+        }
+    }
+
+    // ========= NUEVO: eliminar avatar del usuario =========
+    @DeleteMapping("/{id}/avatar")
+    public ResponseEntity<UsuarioResponse> deleteAvatar(
+            @PathVariable("id") String id,
+            Authentication auth
+    ) {
+        try {
+            // Obtener usuario para conocer la URL actual del avatar
+            UsuarioResponse usuario = usuarioService.findById(id);
+            String currentAvatarUrl = usuario.getAvatarUrl();
+
+            // Eliminar de Supabase si existe
+            if (currentAvatarUrl != null && !currentAvatarUrl.isBlank()) {
+                supabaseStorageService.deleteByPublicUrl(currentAvatarUrl);
+            }
+
+            // Limpiar avatarUrl en la BD (dejarlo en null o vacío)
+            UsuarioResponse actualizado = usuarioService.actualizarAvatar(id, null);
+
+            return ResponseEntity.ok(actualizado);
+        } catch (Exception e) {
+            throw new RuntimeException("Error al eliminar avatar: " + e.getMessage(), e);
+        }
+    }
+    // ======================================================
 
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntime(RuntimeException ex) {

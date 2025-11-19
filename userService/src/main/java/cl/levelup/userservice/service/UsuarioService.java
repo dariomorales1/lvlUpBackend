@@ -13,5 +13,7 @@ public interface UsuarioService {
     void delete(String id);
 
     UsuarioResponse createFromPublicRequest(UsuarioPublicRequest request);
+
+    UsuarioResponse actualizarAvatar(String id, String avatarUrl);
 }
 
