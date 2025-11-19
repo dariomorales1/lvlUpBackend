@@ -9,6 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import cl.levelup.userservice.model.dto.DireccionRequest;
+import cl.levelup.userservice.model.dto.DireccionResponse;
+import cl.levelup.userservice.service.DireccionService;
 
 import java.net.URI;
 import java.util.List;
@@ -18,9 +21,11 @@ import java.util.List;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+    private final DireccionService direccionService;
 
-    public UsuarioController(UsuarioService usuarioService) {
+    public UsuarioController(UsuarioService usuarioService, DireccionService direccionService) {
         this.usuarioService = usuarioService;
+        this.direccionService = direccionService;
     }
 
     @GetMapping
@@ -95,5 +100,46 @@ public class UsuarioController {
                 .body(creado);
     }
 
+    // Listar direcciones del usuario actual
+    @GetMapping("/me/direcciones")
+    public List<DireccionResponse> listarDirecciones(Authentication auth) {
+        String uid = (String) auth.getPrincipal();
+        return direccionService.listarPorUsuario(uid);
+    }
+
+    // Crear nueva dirección usuario actual
+    @PostMapping("/me/direcciones")
+    public ResponseEntity<DireccionResponse> crearDireccion(
+            @Valid @RequestBody DireccionRequest request,
+            Authentication auth
+    ) {
+        String uid = (String) auth.getPrincipal();
+        DireccionResponse creado = direccionService.crearParaUsuario(uid, request);
+        return ResponseEntity
+                .created(URI.create("/users/me/direcciones/" + creado.getId()))
+                .body(creado);
+    }
+
+    // Actualizar dirección (solo si pertenece al usuario actual)
+    @PutMapping("/me/direcciones/{id}")
+    public DireccionResponse actualizarDireccion(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody DireccionRequest request,
+            Authentication auth
+    ) {
+        String uid = (String) auth.getPrincipal();
+        return direccionService.actualizarParaUsuario(uid, id, request);
+    }
+
+    // Eliminar dirección del usuario actual
+    @DeleteMapping("/me/direcciones/{id}")
+    public ResponseEntity<Void> eliminarDireccion(
+            @PathVariable("id") Long id,
+            Authentication auth
+    ) {
+        String uid = (String) auth.getPrincipal();
+        direccionService.eliminarParaUsuario(uid, id);
+        return ResponseEntity.noContent().build();
+    }
 
 }
