@@ -15,8 +15,10 @@ spring:
             cors-configurations:
               '[/**]':
                 allowed-origins:
+                  - "${SITE_URL:http://localhost:8000}"
                   - "${SITE_URL:http://localhost:8080}"
                   - "${SITE_URL:http://localhost:3000}"
+                  - "${SITE_URL:http://levelup.ddns.net:8000}"
                   - "${SITE_URL:http://levelup.ddns.net:8080}"
                   - "${SITE_URL:http://levelup.ddns.net}"
                 allowed-methods:
