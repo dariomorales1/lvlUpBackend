@@ -1,4 +1,4 @@
-package cl.levelup.productservice.controller.response;
+package cl.levelup.productservice.model.dto;
 
 import lombok.*;
 
