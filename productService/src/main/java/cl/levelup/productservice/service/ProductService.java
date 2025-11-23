@@ -1,7 +1,6 @@
 package cl.levelup.productservice.service;
 
 import cl.levelup.productservice.model.Product;
-import cl.levelup.productservice.model.ProductSpecification;
 import cl.levelup.productservice.repository.ProductRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,74 +23,66 @@ public class ProductService {
         return productRepository.findByCodigo(codigo);
     }
 
-    public void add(Product productRequest) {
-        // Mapear strings a ProductSpecification si vienen como lista de strings
-        if (productRequest.getEspecificaciones() != null && !productRequest.getEspecificaciones().isEmpty()) {
-            List<ProductSpecification> specs = productRequest.getEspecificaciones().stream()
-                    .map(desc -> {
-                        ProductSpecification ps = new ProductSpecification();
-                        ps.setSpecification(desc.getSpecification()); // si recibes objetos, ajusta
-                        ps.setProduct(productRequest);
-                        return ps;
-                    }).toList();
-            productRequest.setEspecificaciones(specs);
-        }
-
-        productRepository.save(productRequest);
+    public Product add(Product product) {
+        return productRepository.save(product);
     }
 
     public void delete(String codigo) {
-        productRepository.deleteByCodigo(codigo);
-    }
-
-    public void update(Product existing, Product data) {
-        existing.setNombre(data.getNombre());
-        existing.setDescripcionCorta(data.getDescripcionCorta());
-        existing.setDescripcionLarga(data.getDescripcionLarga());
-        existing.setCategoria(data.getCategoria());
-        existing.setPrecio(data.getPrecio());
-        existing.setStock(data.getStock());
-        existing.setImagenUrl(data.getImagenUrl());
-
-        if (data.getEspecificaciones() != null) {
-            // Limpiar existentes y agregar nuevos
-            existing.getEspecificaciones().clear();
-            data.getEspecificaciones().forEach(ps -> {
-                ps.setProduct(existing);
-                existing.getEspecificaciones().add(ps);
-            });
+        Product existing = productRepository.findByCodigo(codigo);
+        if (existing != null) {
+            productRepository.delete(existing);
         }
-
-        productRepository.save(existing);
     }
 
-    public void partialUpdate(Product existing, Product data) {
-        if (data.getNombre() != null) existing.setNombre(data.getNombre());
-        if (data.getDescripcionCorta() != null) existing.setDescripcionCorta(data.getDescripcionCorta());
-        if (data.getDescripcionLarga() != null) existing.setDescripcionLarga(data.getDescripcionLarga());
-        if (data.getCategoria() != null) existing.setCategoria(data.getCategoria());
-        if (data.getPrecio() != null) existing.setPrecio(data.getPrecio());
-        if (data.getStock() != null) existing.setStock(data.getStock());
-        if (data.getImagenUrl() != null) existing.setImagenUrl(data.getImagenUrl());
-        if (data.getEspecificaciones() != null) {
-            existing.getEspecificaciones().clear();
-            data.getEspecificaciones().forEach(ps -> {
-                ps.setProduct(existing);
-                existing.getEspecificaciones().add(ps);
-            });
-        }
-
-        productRepository.save(existing);
-    }
-
+    /**
+     * Determina si la actualización es parcial:
+     * si falta alguno de los campos "principales", asumimos PATCH.
+     */
     public boolean isPartialUpdate(Product req) {
-        return (req.getNombre() == null ||
-                req.getDescripcionCorta() == null ||
-                req.getDescripcionLarga() == null ||
-                req.getCategoria() == null ||
-                req.getPrecio() == null ||
-                req.getStock() == null ||
-                req.getImagenUrl() == null ||
-                req.getEspecificaciones() == null);
+        return req.getNombre() == null
+                || req.getDescripcionCorta() == null
+                || req.getDescripcionLarga() == null
+                || req.getCategoria() == null
+                || req.getPrecio() == null
+                || req.getStock() == null
+                || req.getImagenUrl() == null;
+    }
+
+    public void partialUpdate(Product existing, Product req) {
+        if (req.getNombre() != null) {
+            existing.setNombre(req.getNombre());
+        }
+        if (req.getDescripcionCorta() != null) {
+            existing.setDescripcionCorta(req.getDescripcionCorta());
+        }
+        if (req.getDescripcionLarga() != null) {
+            existing.setDescripcionLarga(req.getDescripcionLarga());
+        }
+        if (req.getCategoria() != null) {
+            existing.setCategoria(req.getCategoria());
+        }
+        if (req.getPrecio() != null) {
+            existing.setPrecio(req.getPrecio());
+        }
+        if (req.getStock() != null) {
+            existing.setStock(req.getStock());
+        }
+        if (req.getImagenUrl() != null) {
+            existing.setImagenUrl(req.getImagenUrl());
+        }
+
+        productRepository.save(existing);
+    }
+
+    public void update(Product existing, Product req) {
+        existing.setNombre(req.getNombre());
+        existing.setDescripcionCorta(req.getDescripcionCorta());
+        existing.setDescripcionLarga(req.getDescripcionLarga());
+        existing.setCategoria(req.getCategoria());
+        existing.setPrecio(req.getPrecio());
+        existing.setStock(req.getStock());
+        existing.setImagenUrl(req.getImagenUrl());
+
+        productRepository.save(existing);
     }
 }
