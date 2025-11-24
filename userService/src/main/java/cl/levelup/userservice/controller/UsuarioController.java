@@ -201,4 +201,9 @@ public class UsuarioController {
         return ResponseEntity.noContent().build();
     }
 
+
+    // guardar puntos
+
+    // gastar puntos
+
 }
