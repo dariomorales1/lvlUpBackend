@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -15,6 +18,8 @@ public class ProductService {
 
     @Autowired
     private ProductRepository productRepository;
+
+    // ================== BÚSQUEDAS BÁSICAS ==================
 
     public List<Product> findAll() {
         return productRepository.findAll();
@@ -24,74 +29,124 @@ public class ProductService {
         return productRepository.findByCodigo(codigo);
     }
 
-    public void add(Product productRequest) {
-        // Mapear strings a ProductSpecification si vienen como lista de strings
-        if (productRequest.getEspecificaciones() != null && !productRequest.getEspecificaciones().isEmpty()) {
-            List<ProductSpecification> specs = productRequest.getEspecificaciones().stream()
-                    .map(desc -> {
-                        ProductSpecification ps = new ProductSpecification();
-                        ps.setSpecification(desc.getSpecification()); // si recibes objetos, ajusta
-                        ps.setProduct(productRequest);
-                        return ps;
-                    }).toList();
-            productRequest.setEspecificaciones(specs);
+    // ================== CREAR PRODUCTO ==================
+
+    public Product add(Product product) {
+
+        // Aseguramos relación bidireccional con especificaciones
+        if (product.getEspecificaciones() != null) {
+            product.getEspecificaciones().forEach(spec -> {
+                if (spec != null) {
+                    spec.setProduct(product);
+                }
+            });
         }
 
-        productRepository.save(productRequest);
+        return productRepository.save(product);
     }
+
+    // ================== ELIMINAR PRODUCTO ==================
 
     public void delete(String codigo) {
-        productRepository.deleteByCodigo(codigo);
-    }
-
-    public void update(Product existing, Product data) {
-        existing.setNombre(data.getNombre());
-        existing.setDescripcionCorta(data.getDescripcionCorta());
-        existing.setDescripcionLarga(data.getDescripcionLarga());
-        existing.setCategoria(data.getCategoria());
-        existing.setPrecio(data.getPrecio());
-        existing.setStock(data.getStock());
-        existing.setImagenUrl(data.getImagenUrl());
-
-        if (data.getEspecificaciones() != null) {
-            // Limpiar existentes y agregar nuevos
-            existing.getEspecificaciones().clear();
-            data.getEspecificaciones().forEach(ps -> {
-                ps.setProduct(existing);
-                existing.getEspecificaciones().add(ps);
-            });
+        Product existing = productRepository.findByCodigo(codigo);
+        if (existing != null) {
+            productRepository.delete(existing);
         }
-
-        productRepository.save(existing);
     }
 
-    public void partialUpdate(Product existing, Product data) {
-        if (data.getNombre() != null) existing.setNombre(data.getNombre());
-        if (data.getDescripcionCorta() != null) existing.setDescripcionCorta(data.getDescripcionCorta());
-        if (data.getDescripcionLarga() != null) existing.setDescripcionLarga(data.getDescripcionLarga());
-        if (data.getCategoria() != null) existing.setCategoria(data.getCategoria());
-        if (data.getPrecio() != null) existing.setPrecio(data.getPrecio());
-        if (data.getStock() != null) existing.setStock(data.getStock());
-        if (data.getImagenUrl() != null) existing.setImagenUrl(data.getImagenUrl());
-        if (data.getEspecificaciones() != null) {
-            existing.getEspecificaciones().clear();
-            data.getEspecificaciones().forEach(ps -> {
-                ps.setProduct(existing);
-                existing.getEspecificaciones().add(ps);
-            });
-        }
-
-        productRepository.save(existing);
-    }
+    // ================== LÓGICA DE UPDATE ==================
 
     public boolean isPartialUpdate(Product req) {
-        return (req.getNombre() == null ||
-                req.getDescripcionCorta() == null ||
-                req.getDescripcionLarga() == null ||
-                req.getCategoria() == null ||
-                req.getPrecio() == null ||
-                req.getStock() == null ||
-                req.getImagenUrl() == null ||
-                req.getEspecificaciones() == null);
+        return req.getNombre() == null
+                || req.getDescripcionCorta() == null
+                || req.getDescripcionLarga() == null
+                || req.getCategoria() == null
+                || req.getPrecio() == null
+                || req.getStock() == null
+                || req.getImagenUrl() == null;
+    }
+
+    /**
+     * PATCH / update parcial del producto
+     * (si quieres que aquí también se editen especificaciones,
+     * puedes copiar la lógica de update() abajo)
+     */
+    public void partialUpdate(Product existing, Product req) {
+
+        if (req.getNombre() != null) {
+            existing.setNombre(req.getNombre());
+        }
+        if (req.getDescripcionCorta() != null) {
+            existing.setDescripcionCorta(req.getDescripcionCorta());
+        }
+        if (req.getDescripcionLarga() != null) {
+            existing.setDescripcionLarga(req.getDescripcionLarga());
+        }
+        if (req.getCategoria() != null) {
+            existing.setCategoria(req.getCategoria());
+        }
+        if (req.getPrecio() != null) {
+            existing.setPrecio(req.getPrecio());
+        }
+        if (req.getStock() != null) {
+            existing.setStock(req.getStock());
+        }
+        if (req.getImagenUrl() != null) {
+            existing.setImagenUrl(req.getImagenUrl());
+        }
+
+        // Por ahora NO tocamos especificaciones en partialUpdate
+        productRepository.save(existing);
+    }
+
+    /**
+     * PUT / update completo del producto
+     * 👉 Ajustado para:
+     *  - Actualizar especificaciones existentes por id
+     *  - Agregar nuevas especificaciones (id null)
+     *  - NO borrar las que no vienen en el request
+     */
+    public void update(Product existing, Product req) {
+
+        // Campos básicos
+        existing.setNombre(req.getNombre());
+        existing.setDescripcionCorta(req.getDescripcionCorta());
+        existing.setDescripcionLarga(req.getDescripcionLarga());
+        existing.setCategoria(req.getCategoria());
+        existing.setPrecio(req.getPrecio());
+        existing.setStock(req.getStock());
+        existing.setImagenUrl(req.getImagenUrl());
+
+        // ================== ESPECIFICACIONES ==================
+        if (req.getEspecificaciones() != null && !req.getEspecificaciones().isEmpty()) {
+
+            // Mapa de especificaciones existentes por ID
+            Map<Long, ProductSpecification> existingMap = existing.getEspecificaciones().stream()
+                    .filter(spec -> spec.getId() != null)
+                    .collect(Collectors.toMap(ProductSpecification::getId, Function.identity()));
+
+            // Recorremos las especificaciones que vienen en el request
+            req.getEspecificaciones().forEach(incoming -> {
+                if (incoming == null) return;
+                String texto = incoming.getSpecification();
+                if (texto == null || texto.isBlank()) return;
+
+                // Caso 1: viene con ID → intentamos actualizar
+                if (incoming.getId() != null && existingMap.containsKey(incoming.getId())) {
+                    ProductSpecification target = existingMap.get(incoming.getId());
+                    target.setSpecification(texto);
+                    // product ya está seteado
+                } else {
+                    // Caso 2: nueva especificación (id null o no existe en BD)
+                    incoming.setId(null); // forzamos a que JPA la trate como nueva
+                    incoming.setProduct(existing);
+                    existing.getEspecificaciones().add(incoming);
+                }
+            });
+
+            // Importante: NO hacemos clear(), así no rompemos las que no vienen en el payload
+        }
+
+        productRepository.save(existing);
     }
 }

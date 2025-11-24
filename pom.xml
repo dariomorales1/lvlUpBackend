@@ -32,8 +32,39 @@
         <java.version>17</java.version>
     </properties>
 
+    <!-- AQUÍ sí puedes centralizar versiones -->
     <dependencyManagement>
         <dependencies>
+
+            <!-- Ejemplo: Postgres -->
+            <dependency>
+                <groupId>org.postgresql</groupId>
+                <artifactId>postgresql</artifactId>
+                <version>42.7.3</version>
+            </dependency>
+
+            <!-- Lombok unificado -->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>1.18.32</version>
+            </dependency>
+
+            <!-- Firebase unificado -->
+            <dependency>
+                <groupId>com.google.firebase</groupId>
+                <artifactId>firebase-admin</artifactId>
+                <version>9.2.0</version>
+            </dependency>
+
+            <!-- JWT (si de verdad todos lo van a usar) -->
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-api</artifactId>
+                <version>0.12.5</version>
+            </dependency>
+
+            <!-- etc, lo que quieras centralizar -->
         </dependencies>
     </dependencyManagement>
     <dependencies>
@@ -105,11 +136,10 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>8</source>
-                    <target>8</target>
+                    <source>17</source>
+                    <target>17</target>
                 </configuration>
             </plugin>
         </plugins>
     </build>
-
 </project>

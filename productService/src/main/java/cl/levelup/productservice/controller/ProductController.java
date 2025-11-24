@@ -1,8 +1,11 @@
 package cl.levelup.productservice.controller;
 
-import cl.levelup.productservice.controller.response.MessageResponse;
+import cl.levelup.productservice.model.dto.MessageResponse;
+import cl.levelup.productservice.model.dto.ResenaRequest;
 import cl.levelup.productservice.model.Product;
+import cl.levelup.productservice.model.Resena;
 import cl.levelup.productservice.service.ProductService;
+import cl.levelup.productservice.service.ResenaService;
 import cl.levelup.productservice.storage.SupabaseStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -27,6 +30,9 @@ public class ProductController {
     @Autowired
     private SupabaseStorageService supabaseStorageService;
 
+    @Autowired
+    private ResenaService resenaService;
+
     @GetMapping("/health")
     public ResponseEntity<MessageResponse> health() {
         return ResponseEntity.ok(new MessageResponse("Ok"));
@@ -45,13 +51,20 @@ public class ProductController {
 
     @GetMapping("/{productCode}")
     public ResponseEntity<?> getProduct(@PathVariable String productCode) {
+
         Product existing = productService.findByCodigo(productCode);
-        if (existing != null) {
-            return ResponseEntity.ok(existing);
-        } else {
+        if (existing == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new MessageResponse("Product doesn't exists"));
         }
+
+        // 🔥 Traemos reseñas enriquecidas con datos del usuario
+        List<Resena> resenasEnriquecidas =
+                resenaService.getResenasEnriquecidas(productCode);
+
+        existing.setResenas(resenasEnriquecidas);
+
+        return ResponseEntity.ok(existing);
     }
 
     // ================== SUBIR IMAGEN DE PRODUCTO ==================
@@ -189,4 +202,78 @@ public class ProductController {
         }
     }
 
+    // ================== RESEÑAS ==================
+
+    // Obtener todas las reseñas de un producto
+    @GetMapping("/{productCode}/resenas")
+    public ResponseEntity<?> getResenasByProduct(@PathVariable String productCode) {
+        Product existing = productService.findByCodigo(productCode);
+        if (existing == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new MessageResponse("Product doesn't exists"));
+        }
+
+        List<Resena> resenas = resenaService.getResenasByProductCode(productCode);
+        return resenas.isEmpty()
+                ? ResponseEntity.noContent().build()
+                : ResponseEntity.ok(resenas);
+    }
+
+    // Crear nueva reseña
+    @PostMapping("/{productCode}/resenas")
+    public ResponseEntity<?> addResena(
+            @PathVariable String productCode,
+            @RequestBody ResenaRequest request
+    ) {
+        try {
+            Resena created = resenaService.addResena(productCode, request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new MessageResponse(e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error al crear reseña"));
+        }
+    }
+
+    // Actualizar reseña
+    @PutMapping("/{productCode}/resenas/{resenaId}")
+    public ResponseEntity<?> updateResena(
+            @PathVariable String productCode,
+            @PathVariable Long resenaId,
+            @RequestBody ResenaRequest request
+    ) {
+        try {
+            Resena updated = resenaService.updateResena(productCode, resenaId, request);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new MessageResponse(e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error al actualizar reseña"));
+        }
+    }
+
+    // Eliminar reseña
+    @DeleteMapping("/{productCode}/resenas/{resenaId}")
+    public ResponseEntity<?> deleteResena(
+            @PathVariable String productCode,
+            @PathVariable Long resenaId
+    ) {
+        try {
+            resenaService.deleteResena(productCode, resenaId);
+            return ResponseEntity.ok(new MessageResponse("Reseña eliminada correctamente"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new MessageResponse(e.getMessage()));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new MessageResponse("Error al eliminar reseña"));
+        }
+    }
 }

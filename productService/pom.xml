@@ -23,12 +23,11 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!-- NUEVO: WebFlux para usar WebClient con Supabase -->
+        <!-- WebFlux -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
-        <!-- FIN NUEVO -->
 
         <!-- JPA + Hibernate -->
         <dependency>
@@ -43,11 +42,10 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Lombok (solo una vez) -->
+        <!-- Lombok (ya versionado en el padre) -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.32</version>
             <optional>true</optional>
         </dependency>
 
@@ -57,7 +55,6 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
 
     <build>
