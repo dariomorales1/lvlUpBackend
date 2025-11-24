@@ -1,12 +1,16 @@
 package cl.levelup.productservice.service;
 
 import cl.levelup.productservice.model.Product;
+import cl.levelup.productservice.model.ProductSpecification;
 import cl.levelup.productservice.repository.ProductRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -14,6 +18,8 @@ public class ProductService {
 
     @Autowired
     private ProductRepository productRepository;
+
+    // ================== BÚSQUEDAS BÁSICAS ==================
 
     public List<Product> findAll() {
         return productRepository.findAll();
@@ -23,9 +29,23 @@ public class ProductService {
         return productRepository.findByCodigo(codigo);
     }
 
+    // ================== CREAR PRODUCTO ==================
+
     public Product add(Product product) {
+
+        // Aseguramos relación bidireccional con especificaciones
+        if (product.getEspecificaciones() != null) {
+            product.getEspecificaciones().forEach(spec -> {
+                if (spec != null) {
+                    spec.setProduct(product);
+                }
+            });
+        }
+
         return productRepository.save(product);
     }
+
+    // ================== ELIMINAR PRODUCTO ==================
 
     public void delete(String codigo) {
         Product existing = productRepository.findByCodigo(codigo);
@@ -34,10 +54,8 @@ public class ProductService {
         }
     }
 
-    /**
-     * Determina si la actualización es parcial:
-     * si falta alguno de los campos "principales", asumimos PATCH.
-     */
+    // ================== LÓGICA DE UPDATE ==================
+
     public boolean isPartialUpdate(Product req) {
         return req.getNombre() == null
                 || req.getDescripcionCorta() == null
@@ -48,7 +66,13 @@ public class ProductService {
                 || req.getImagenUrl() == null;
     }
 
+    /**
+     * PATCH / update parcial del producto
+     * (si quieres que aquí también se editen especificaciones,
+     * puedes copiar la lógica de update() abajo)
+     */
     public void partialUpdate(Product existing, Product req) {
+
         if (req.getNombre() != null) {
             existing.setNombre(req.getNombre());
         }
@@ -71,10 +95,20 @@ public class ProductService {
             existing.setImagenUrl(req.getImagenUrl());
         }
 
+        // Por ahora NO tocamos especificaciones en partialUpdate
         productRepository.save(existing);
     }
 
+    /**
+     * PUT / update completo del producto
+     * 👉 Ajustado para:
+     *  - Actualizar especificaciones existentes por id
+     *  - Agregar nuevas especificaciones (id null)
+     *  - NO borrar las que no vienen en el request
+     */
     public void update(Product existing, Product req) {
+
+        // Campos básicos
         existing.setNombre(req.getNombre());
         existing.setDescripcionCorta(req.getDescripcionCorta());
         existing.setDescripcionLarga(req.getDescripcionLarga());
@@ -82,6 +116,36 @@ public class ProductService {
         existing.setPrecio(req.getPrecio());
         existing.setStock(req.getStock());
         existing.setImagenUrl(req.getImagenUrl());
+
+        // ================== ESPECIFICACIONES ==================
+        if (req.getEspecificaciones() != null && !req.getEspecificaciones().isEmpty()) {
+
+            // Mapa de especificaciones existentes por ID
+            Map<Long, ProductSpecification> existingMap = existing.getEspecificaciones().stream()
+                    .filter(spec -> spec.getId() != null)
+                    .collect(Collectors.toMap(ProductSpecification::getId, Function.identity()));
+
+            // Recorremos las especificaciones que vienen en el request
+            req.getEspecificaciones().forEach(incoming -> {
+                if (incoming == null) return;
+                String texto = incoming.getSpecification();
+                if (texto == null || texto.isBlank()) return;
+
+                // Caso 1: viene con ID → intentamos actualizar
+                if (incoming.getId() != null && existingMap.containsKey(incoming.getId())) {
+                    ProductSpecification target = existingMap.get(incoming.getId());
+                    target.setSpecification(texto);
+                    // product ya está seteado
+                } else {
+                    // Caso 2: nueva especificación (id null o no existe en BD)
+                    incoming.setId(null); // forzamos a que JPA la trate como nueva
+                    incoming.setProduct(existing);
+                    existing.getEspecificaciones().add(incoming);
+                }
+            });
+
+            // Importante: NO hacemos clear(), así no rompemos las que no vienen en el payload
+        }
 
         productRepository.save(existing);
     }
