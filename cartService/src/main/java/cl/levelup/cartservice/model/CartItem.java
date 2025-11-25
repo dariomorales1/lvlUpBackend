@@ -1,9 +1,9 @@
 package cl.levelup.cartservice.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
+
 import java.util.UUID;
 
 @Entity
@@ -32,7 +32,7 @@ public class CartItem {
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
-    @Column(name = "imagenurl", nullable = true)
+    @Column(name = "imagenurl")
     private String imagenUrl;
 
     public Long getSubtotal() {

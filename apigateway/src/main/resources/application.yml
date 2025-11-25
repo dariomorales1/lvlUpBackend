@@ -39,8 +39,13 @@ spring:
                 allow-credentials: true
 
           routes:
+            - id: swagger-ui
+              uri: http://localhost:${server.port}
+              predicates:
+                - Path=/swagger-ui.html, /webjars/**, /v3/api-docs/**
+
             - id: gateway-actuator
-              uri: http://localhost:8080
+              uri: http://localhost:${server.port}
               predicates:
                 - Path=/actuator/**
               filters:
@@ -74,17 +79,19 @@ spring:
               predicates:
                 - Path=/orders/**
 
-            - id: billingService
-              uri: http://localhost:8086
-              predicates:
-                - Path=/billings/**
 
-            - id: reviewService
-              uri: http://localhost:8087
-              predicates:
-                - Path=/reviews/**
-              filters:
-                - StripPrefix=1
+# Configuración SpringDoc
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: alpha
+    tags-sorter: alpha
+    try-it-out-enabled: true
+    filter: true
 
 management:
   endpoints:
@@ -95,3 +102,4 @@ management:
 logging:
   level:
     org.springframework.cloud.gateway: INFO
+    org.springdoc: INFO

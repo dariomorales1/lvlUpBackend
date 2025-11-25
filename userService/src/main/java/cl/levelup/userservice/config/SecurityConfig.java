@@ -1,3 +1,4 @@
+// userService/src/main/java/cl/levelup/userservice/config/SecurityConfig.java
 package cl.levelup.userservice.config;
 
 import org.springframework.context.annotation.Bean;
@@ -24,9 +25,28 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // SOLO health check es público
-                        .requestMatchers("/actuator/health").permitAll()
+                        // Swagger UI y OpenAPI endpoints - PERMITIR SIN AUTENTICACIÓN
+                        .requestMatchers(
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/v3/api-docs.yaml",
+                                "/swagger-resources/**",
+                                "/swagger-resources",
+                                "/webjars/**",
+                                "/configuration/ui",
+                                "/configuration/security",
+                                "/favicon.ico",
+                                "/error",
+                                "/"
+                        ).permitAll()
+
+                        // Actuator endpoints
+                        .requestMatchers("/actuator/**").permitAll()
+
+                        // Endpoints públicos de la aplicación
                         .requestMatchers("/users/public/register").permitAll()
+
                         // TODOS los demás endpoints requieren autenticación
                         .anyRequest().authenticated()
                 )

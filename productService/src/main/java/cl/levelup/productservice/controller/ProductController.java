@@ -7,6 +7,13 @@ import cl.levelup.productservice.model.Resena;
 import cl.levelup.productservice.service.ProductService;
 import cl.levelup.productservice.service.ResenaService;
 import cl.levelup.productservice.storage.SupabaseStorageService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -22,6 +29,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/products")
+@Tag(name = "Products", description = "APIs para gestión de productos, imágenes y reseñas")
 public class ProductController {
 
     @Autowired
@@ -33,11 +41,21 @@ public class ProductController {
     @Autowired
     private ResenaService resenaService;
 
+    @Operation(summary = "Health check", description = "Verifica el estado del servicio de productos")
+    @ApiResponse(responseCode = "200", description = "Servicio funcionando correctamente")
     @GetMapping("/health")
     public ResponseEntity<MessageResponse> health() {
         return ResponseEntity.ok(new MessageResponse("Ok"));
     }
 
+    @Operation(
+            summary = "Obtener todos los productos",
+            description = "Retorna lista de todos los productos ordenados por código"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Lista de productos obtenida exitosamente"),
+            @ApiResponse(responseCode = "204", description = "No hay productos disponibles")
+    })
     @GetMapping("/")
     public ResponseEntity<?> getAllProducts() {
         List<Product> products = productService.findAll()
@@ -49,8 +67,18 @@ public class ProductController {
                 : ResponseEntity.ok(products);
     }
 
+    @Operation(
+            summary = "Obtener producto por código",
+            description = "Retorna un producto específico con sus reseñas enriquecidas"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Producto encontrado"),
+            @ApiResponse(responseCode = "404", description = "Producto no encontrado")
+    })
     @GetMapping("/{productCode}")
-    public ResponseEntity<?> getProduct(@PathVariable String productCode) {
+    public ResponseEntity<?> getProduct(
+            @Parameter(description = "Código único del producto", example = "PROD-001", required = true)
+            @PathVariable String productCode) {
 
         Product existing = productService.findByCodigo(productCode);
         if (existing == null) {
@@ -58,25 +86,36 @@ public class ProductController {
                     .body(new MessageResponse("Product doesn't exists"));
         }
 
-        // 🔥 Traemos reseñas enriquecidas con datos del usuario
-        List<Resena> resenasEnriquecidas =
-                resenaService.getResenasEnriquecidas(productCode);
-
+        List<Resena> resenasEnriquecidas = resenaService.getResenasEnriquecidas(productCode);
         existing.setResenas(resenasEnriquecidas);
 
         return ResponseEntity.ok(existing);
     }
 
-    // ================== SUBIR IMAGEN DE PRODUCTO ==================
-
+    @Operation(
+            summary = "Subir imagen de producto",
+            description = "Sube una imagen para un producto específico a Supabase Storage"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Imagen subida exitosamente"),
+            @ApiResponse(responseCode = "500", description = "Error al subir la imagen")
+    })
     @PostMapping(
             path = "/{productCode}/image",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
     public ResponseEntity<?> uploadProductImage(
+            @Parameter(description = "Código del producto", required = true)
             @PathVariable("productCode") String productCode,
+            @Parameter(
+                    description = "Archivo de imagen",
+                    required = true,
+                    content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
+            )
             @RequestPart("file") MultipartFile file,
+            @Parameter(description = "Categoría del producto", example = "electronics", required = true)
             @RequestParam("categoria") String categoria,
+            @Parameter(description = "Nombre del producto", example = "Laptop Gaming", required = true)
             @RequestParam("nombreProducto") String nombreProducto
     ) {
         try {
@@ -93,10 +132,19 @@ public class ProductController {
         }
     }
 
-    // ==============================================================
-
+    @Operation(
+            summary = "Agregar nuevo producto",
+            description = "Crea un nuevo producto en el catálogo"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Producto agregado exitosamente"),
+            @ApiResponse(responseCode = "409", description = "El producto ya existe"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @PostMapping("/")
-    public ResponseEntity<MessageResponse> addProduct(@RequestBody Product productRequest) {
+    public ResponseEntity<MessageResponse> addProduct(
+            @Parameter(description = "Datos del producto a crear", required = true)
+            @RequestBody Product productRequest) {
         System.out.println("Producto recibido: " + productRequest);
         try {
             Product existing = productService.findByCodigo(productRequest.getCodigo());
@@ -108,11 +156,9 @@ public class ProductController {
                 String imagen = productRequest.getImagenUrl();
 
                 if (imagen != null && !imagen.isEmpty()) {
-                    // Si ya viene como URL completa (Supabase u otra), la dejamos tal cual
                     if (imagen.startsWith("http://") || imagen.startsWith("https://")) {
-                        // no cambiamos nada
+                        // Ya es una URL completa, no hacer nada
                     } else if (!imagen.startsWith(baseUrl + categoryPath)) {
-                        // Si es solo el nombre de archivo, armamos la URL
                         imagen = baseUrl + categoryPath + imagen;
                     }
                     productRequest.setImagenUrl(imagen);
@@ -131,15 +177,26 @@ public class ProductController {
         }
     }
 
+    @Operation(
+            summary = "Eliminar producto",
+            description = "Elimina un producto y su imagen asociada de Supabase Storage"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Producto eliminado exitosamente"),
+            @ApiResponse(responseCode = "404", description = "Producto no encontrado"),
+            @ApiResponse(responseCode = "409", description = "ID de producto no proporcionado"),
+            @ApiResponse(responseCode = "500", description = "Error al eliminar el producto")
+    })
     @DeleteMapping("/{productId}")
-    public ResponseEntity<MessageResponse> deleteProduct(@PathVariable String productId) {
+    public ResponseEntity<MessageResponse> deleteProduct(
+            @Parameter(description = "Código del producto a eliminar", example = "PROD-001", required = true)
+            @PathVariable String productId) {
         if (productId == null) {
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(new MessageResponse("Product id not found"));
         }
 
         try {
-            // productId en tu caso es el codigo del producto
             Product existing = productService.findByCodigo(productId);
 
             if (existing == null) {
@@ -147,13 +204,11 @@ public class ProductController {
                         .body(new MessageResponse("Product doesn't exist"));
             }
 
-            // 1) Si tiene imagen, la eliminamos de Supabase Storage
             String imagenUrl = existing.getImagenUrl();
             if (imagenUrl != null && !imagenUrl.isBlank()) {
                 supabaseStorageService.deleteByPublicUrl(imagenUrl);
             }
 
-            // 2) Eliminamos el producto de la BD
             productService.delete(productId);
 
             return ResponseEntity.ok(new MessageResponse("Product deleted successfully"));
@@ -164,9 +219,19 @@ public class ProductController {
         }
     }
 
+    @Operation(
+            summary = "Actualizar producto",
+            description = "Actualiza un producto existente (actualización completa o parcial)"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Producto actualizado exitosamente"),
+            @ApiResponse(responseCode = "404", description = "Producto no encontrado")
+    })
     @PutMapping("/{productCode}")
     public ResponseEntity<MessageResponse> updateProduct(
+            @Parameter(description = "Código del producto a actualizar", required = true)
             @PathVariable String productCode,
+            @Parameter(description = "Datos actualizados del producto", required = true)
             @RequestBody Product productRequest) {
 
         Product existing = productService.findByCodigo(productCode);
@@ -183,7 +248,7 @@ public class ProductController {
             String imagen = productRequest.getImagenUrl();
 
             if (imagen.startsWith("http://") || imagen.startsWith("https://")) {
-                // ya es URL completa
+                // Ya es una URL completa, no hacer nada
             } else if (!imagen.startsWith(baseUrl + categoryPath)) {
                 productRequest.setImagenUrl(baseUrl + categoryPath + imagen);
             } else {
@@ -202,11 +267,21 @@ public class ProductController {
         }
     }
 
-    // ================== RESEÑAS ==================
+    // ============ RESEÑAS ============
 
-    // Obtener todas las reseñas de un producto
+    @Operation(
+            summary = "Obtener reseñas de producto",
+            description = "Retorna todas las reseñas de un producto específico"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Lista de reseñas obtenida"),
+            @ApiResponse(responseCode = "204", description = "No hay reseñas para este producto"),
+            @ApiResponse(responseCode = "404", description = "Producto no encontrado")
+    })
     @GetMapping("/{productCode}/resenas")
-    public ResponseEntity<?> getResenasByProduct(@PathVariable String productCode) {
+    public ResponseEntity<?> getResenasByProduct(
+            @Parameter(description = "Código del producto", example = "PROD-001", required = true)
+            @PathVariable String productCode) {
         Product existing = productService.findByCodigo(productCode);
         if (existing == null) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -219,10 +294,20 @@ public class ProductController {
                 : ResponseEntity.ok(resenas);
     }
 
-    // Crear nueva reseña
+    @Operation(
+            summary = "Agregar reseña",
+            description = "Crea una nueva reseña para un producto"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Reseña creada exitosamente"),
+            @ApiResponse(responseCode = "400", description = "Datos de reseña inválidos"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @PostMapping("/{productCode}/resenas")
     public ResponseEntity<?> addResena(
+            @Parameter(description = "Código del producto", required = true)
             @PathVariable String productCode,
+            @Parameter(description = "Datos de la reseña", required = true)
             @RequestBody ResenaRequest request
     ) {
         try {
@@ -238,11 +323,22 @@ public class ProductController {
         }
     }
 
-    // Actualizar reseña
+    @Operation(
+            summary = "Actualizar reseña",
+            description = "Actualiza una reseña existente"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Reseña actualizada exitosamente"),
+            @ApiResponse(responseCode = "400", description = "Datos de reseña inválidos"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @PutMapping("/{productCode}/resenas/{resenaId}")
     public ResponseEntity<?> updateResena(
+            @Parameter(description = "Código del producto", required = true)
             @PathVariable String productCode,
+            @Parameter(description = "ID de la reseña", example = "1", required = true)
             @PathVariable Long resenaId,
+            @Parameter(description = "Datos actualizados de la reseña", required = true)
             @RequestBody ResenaRequest request
     ) {
         try {
@@ -258,10 +354,20 @@ public class ProductController {
         }
     }
 
-    // Eliminar reseña
+    @Operation(
+            summary = "Eliminar reseña",
+            description = "Elimina una reseña específica"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Reseña eliminada exitosamente"),
+            @ApiResponse(responseCode = "400", description = "Reseña no encontrada"),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor")
+    })
     @DeleteMapping("/{productCode}/resenas/{resenaId}")
     public ResponseEntity<?> deleteResena(
+            @Parameter(description = "Código del producto", required = true)
             @PathVariable String productCode,
+            @Parameter(description = "ID de la reseña", example = "1", required = true)
             @PathVariable Long resenaId
     ) {
         try {

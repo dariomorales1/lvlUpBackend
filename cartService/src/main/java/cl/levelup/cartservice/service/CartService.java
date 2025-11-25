@@ -31,7 +31,6 @@ public class CartService {
 
     @Transactional
     public Cart addItemToCart(String userId, AddItemRequest request, String authToken) {
-        // Validar que el usuario existe
         Boolean userExists = userService.userExists(userId, authToken)
                 .onErrorReturn(false)
                 .blockOptional()
@@ -108,7 +107,6 @@ public class CartService {
 
     @Transactional
     public void removeItemFromGuestCart(String sessionId, String productId) {
-        // 🔧 Antes estaba processRemoveItem(sessionId, null, productId) (parámetros corridos)
         processRemoveItem(null, sessionId, productId);
     }
 
@@ -145,7 +143,6 @@ public class CartService {
                 newItem.setProductName(guestItem.getProductName());
                 newItem.setUnitPrice(guestItem.getUnitPrice());
                 newItem.setQuantity(guestItem.getQuantity());
-                // 🔹 Importante: conservar también la imagen al migrar
                 newItem.setImagenUrl(guestItem.getImagenUrl());
 
                 cartItemRepository.save(newItem);
@@ -159,22 +156,18 @@ public class CartService {
     // ========= MÉTODOS PRIVADOS AUXILIARES =========
 
     private Cart processAddItem(String userId, String sessionId, AddItemRequest request, String authToken) {
-        // 1) Obtener información del producto
         Map<String, Object> productInfo = getProductInfo(request.getProductId(), authToken);
 
         if (productInfo == null) {
             throw new RuntimeException("Product not found: " + request.getProductId());
         }
 
-        // 2) Validar disponibilidad usando productInfo
         if (!isProductAvailable(request.getProductId(), request.getQuantity(), productInfo)) {
             throw new RuntimeException("Product not available in requested quantity");
         }
 
-        // 3) Obtener o crear carrito
         Cart cart = getOrCreateCart(userId, sessionId);
 
-        // 4) Ver si el item ya existe
         Optional<CartItem> existingItem =
                 findExistingItem(userId, sessionId, request.getProductId());
 
@@ -187,7 +180,6 @@ public class CartService {
             cartItemRepository.save(newItem);
         }
 
-        // 5) Retornar carrito actualizado
         return getUpdatedCart(userId, sessionId);
     }
 
@@ -273,7 +265,6 @@ public class CartService {
         newItem.setCart(cart);
         newItem.setProductId(request.getProductId());
 
-        // Nombre: "name" o "nombre"
         Object nameObj = productInfo.get("name");
         if (nameObj == null) {
             nameObj = productInfo.get("nombre");
@@ -283,7 +274,6 @@ public class CartService {
         }
         newItem.setProductName(nameObj.toString());
 
-        // Precio: "price" o "precio"
         Object priceObj = productInfo.get("price");
         if (priceObj == null) {
             priceObj = productInfo.get("precio");
@@ -294,14 +284,11 @@ public class CartService {
         long price = ((Number) priceObj).longValue();
         newItem.setUnitPrice(price);
 
-        // 🔹 Imagen: "imageUrl" o "imagenUrl" (tu ProductController usa "imagenUrl")
         Object imageObj = productInfo.get("imageUrl");
         if (imageObj == null) {
             imageObj = productInfo.get("imagenUrl");
         }
         if (imageObj == null) {
-            // Si quieres que nunca sea null porque en la columna es NOT NULL,
-            // puedes poner un placeholder o lanzar excepción.
             imageObj = "/default-product.jpg";
         }
         newItem.setImagenUrl(imageObj.toString());

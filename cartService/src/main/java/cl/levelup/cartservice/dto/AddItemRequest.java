@@ -7,6 +7,7 @@ import lombok.Data;
 
 @Data
 public class AddItemRequest {
+
     @NotBlank(message = "Product ID is required")
     private String productId;
 

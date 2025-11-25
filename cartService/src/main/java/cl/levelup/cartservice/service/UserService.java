@@ -11,7 +11,6 @@ public class UserService {
 
     private final WebClient webClient;
 
-    // CORREGIDO: Solo recibe userId
     public Mono<Boolean> userExists(String userId, String authToken) {
         return webClient.get()
                 .uri("/users/{id}", userId)

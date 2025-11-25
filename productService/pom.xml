@@ -15,12 +15,22 @@
     <artifactId>productService</artifactId>
     <name>productService</name>
 
-    <dependencies>
+    <properties>
+        <springdoc.version>2.8.6</springdoc.version>
+    </properties>
 
+    <dependencies>
         <!-- API REST -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- SpringDoc OpenAPI -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc.version}</version>
         </dependency>
 
         <!-- WebFlux -->
@@ -42,7 +52,7 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Lombok (ya versionado en el padre) -->
+        <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -59,8 +69,6 @@
 
     <build>
         <plugins>
-
-            <!-- ACTIVAR annotation processor aquí -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -82,8 +90,6 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
-
         </plugins>
     </build>
-
 </project>

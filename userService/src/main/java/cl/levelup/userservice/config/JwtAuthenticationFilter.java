@@ -1,3 +1,4 @@
+// userService/src/main/java/cl/levelup/userservice/config/JwtAuthenticationFilter.java
 package cl.levelup.userservice.config;
 
 import cl.levelup.userservice.service.JwtService;
@@ -23,26 +24,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+        boolean shouldNotFilter = isPublicPath(path);
+
+        if (shouldNotFilter) {
+            System.out.println("✅ Skipping JWT filter for public path: " + path);
+        } else {
+            System.out.println("🔐 Applying JWT filter for path: " + path);
+        }
+
+        return shouldNotFilter;
+    }
+
+    @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
-
-        String path = request.getServletPath();
-        System.out.println("🛣️  Request path: " + path);
-
-        // SOLO health check es público sin auth
-        if (path.equals("/actuator/health")) {
-            System.out.println("✅ Endpoint público, skipping auth");
-            filterChain.doFilter(request, response);
-            return;
-        }
-        // Registro de usuario es público sin auth
-        if (path.equals("/users/public/register")) {
-            filterChain.doFilter(request, response);
-            return;
-        }
 
         String header = request.getHeader("Authorization");
         System.out.println("🔐 Authorization header: " + header);
@@ -56,7 +56,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String token = header.substring(7);
-        System.out.println("🔐 Token recibido: " + token.substring(0, 20) + "...");
+        System.out.println("🔐 Token recibido: " + (token.length() > 20 ? token.substring(0, 20) + "..." : token));
 
         try {
             System.out.println("🔐 Validando token JWT...");
@@ -84,18 +84,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(auth);
             System.out.println("✅ Autenticación establecida en SecurityContext");
 
-            // Agregar información útil a los headers para debugging
-            response.setHeader("X-User-ID", userId);
-            response.setHeader("X-User-Rol", rol);
-
         } catch (Exception e) {
             System.out.println("❌ JWT validation error: " + e.getMessage());
-            e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Token validation failed: " + e.getMessage());
             return;
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * Verifica si el path es público (no requiere autenticación)
+     */
+    private boolean isPublicPath(String path) {
+        return path.startsWith("/swagger-ui") ||
+                path.startsWith("/v3/api-docs") ||
+                path.startsWith("/webjars") ||
+                path.startsWith("/swagger-resources") ||
+                path.startsWith("/configuration") ||
+                path.equals("/favicon.ico") ||
+                path.equals("/error") ||
+                path.equals("/") ||
+                path.startsWith("/actuator") ||
+                path.equals("/users/public/register") ||
+                path.contains(".well-known") ||
+                path.endsWith(".ico") ||
+                path.endsWith(".css") ||
+                path.endsWith(".js") ||
+                path.endsWith(".png") ||
+                path.endsWith(".jpg") ||
+                path.endsWith(".gif") ||
+                path.endsWith(".html");
     }
 }
