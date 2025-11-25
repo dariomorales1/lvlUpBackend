@@ -32,8 +32,6 @@ public class SwaggerConfig {
                         - **Product Service** (`/products/**`) - Catálogo de productos
                         - **Cart Service** (`/carts/**`) - Carrito de compras
                         - **Order Service** (`/orders/**`) - Procesamiento de pedidos
-                        - **Billing Service** (`/billings/**`) - Facturación y pagos
-                        - **Review Service** (`/reviews/**`) - Reseñas y calificaciones
                         
                         ### **Autenticación:**
                         La mayoría de endpoints requieren JWT token en el header:

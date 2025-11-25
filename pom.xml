@@ -19,10 +19,7 @@
     <modules>
         <module>productService</module>
         <module>orderService</module>
-        <module>reviewService</module>
-        <module>billingService</module>
         <module>cartService</module>
-        <module>reportService</module>
         <module>apigateway</module>
         <module>authService</module>
         <module>userService</module>
@@ -110,6 +107,10 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-core</artifactId>
         </dependency>
     </dependencies>
     <build>

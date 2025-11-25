@@ -79,15 +79,6 @@ spring:
               predicates:
                 - Path=/orders/**
 
-            - id: billingService
-              uri: http://localhost:8086
-              predicates:
-                - Path=/billings/**
-
-            - id: reviewService
-              uri: http://localhost:8087
-              predicates:
-                - Path=/reviews/**
 
 # Configuración SpringDoc
 springdoc:
