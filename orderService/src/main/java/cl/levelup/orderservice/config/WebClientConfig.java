@@ -1,19 +1,15 @@
+// order-service/src/main/java/cl/levelup/orderservice/config/WebClientConfig.java
 package cl.levelup.orderservice.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 
 @Configuration
 public class WebClientConfig {
 
     @Bean
-    public WebClient webClient() {
-        return WebClient.builder()
-                .baseUrl("http://levelup.ddns.net:8080")
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .build();
+    public WebClient.Builder webClientBuilder() {
+        return WebClient.builder();
     }
 }
