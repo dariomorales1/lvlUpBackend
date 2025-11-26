@@ -44,7 +44,7 @@ public class CartItem {
     @Column(name = "imagenurl")
     private String imagenUrl;
 
-    @Schema(description = "Calcula el subtotal del item en centavos")
+    @Schema(description = "Calcula el subtotal del item en pesos")
     public Long getSubtotal() {
         return unitPrice * quantity;
     }
