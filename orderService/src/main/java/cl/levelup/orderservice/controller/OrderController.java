@@ -1,100 +1,77 @@
-// order-service/src/main/java/cl/levelup/orderservice/controller/OrderController.java
 package cl.levelup.orderservice.controller;
 
+import cl.levelup.orderservice.dto.CreateOrderRequest;
 import cl.levelup.orderservice.dto.OrderResponse;
-import cl.levelup.orderservice.dto.PointsResponse;
-import cl.levelup.orderservice.dto.TopBuyerResponse;
+import cl.levelup.orderservice.dto.PointsSummaryResponse;
 import cl.levelup.orderservice.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/orders")
 @RequiredArgsConstructor
-@Tag(name = "Orders", description = "APIs para creación de pedidos, puntos y top compradores")
+@Tag(name = "Orders", description = "APIs para gestión de pedidos")
 public class OrderController {
 
     private final OrderService orderService;
 
-    @Operation(
-            summary = "Crear pedido desde carrito de usuario",
-            description = "Genera una orden desde el carrito actual del usuario, aplica descuentos y puntos",
-            security = @SecurityRequirement(name = "bearerAuth")
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Orden creada exitosamente"),
-            @ApiResponse(responseCode = "400", description = "Carrito vacío o error de negocio"),
-            @ApiResponse(responseCode = "401", description = "No autorizado")
-    })
-
+    @Operation(summary = "Health check OrderService")
     @GetMapping("/health")
     public ResponseEntity<String> health() {
-        return ResponseEntity.ok("OK");
+        return ResponseEntity.ok("Order Service is healthy - " + System.currentTimeMillis());
     }
 
+    @Operation(
+            summary = "Crear pedido desde el carrito",
+            description = "Crea una orden para el usuario a partir de su carrito actual. " +
+                    "Puede opcionalmente usar sus puntos para habilitar el descuento (solo TOP 5)."
+    )
     @PostMapping("/user/{userId}")
-    public ResponseEntity<OrderResponse> createOrderFromCart(
+    public ResponseEntity<OrderResponse> createOrder(
             @Parameter(description = "ID del usuario", required = true)
             @PathVariable String userId,
-            @Parameter(description = "Token JWT de autenticación", required = true)
+            @RequestBody(required = false) CreateOrderRequest request,
             @RequestHeader("Authorization") String authHeader
     ) {
-        String token = extractToken(authHeader);
-        OrderResponse created = orderService.createOrderFromUserCart(userId, usePointsDiscount,token);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        boolean usePointsDiscount = request != null && request.isUsePointsDiscount();
+        OrderResponse response =
+                orderService.createOrderFromCart(userId, usePointsDiscount, authHeader);
+        return ResponseEntity.ok(response);
     }
 
-    @Operation(summary = "Obtener orden por ID")
-    @GetMapping("/{orderId}")
-    public ResponseEntity<OrderResponse> getOrderById(
-            @Parameter(description = "ID de la orden", required = true)
-            @PathVariable UUID orderId
-    ) {
-        return ResponseEntity.ok(orderService.getOrderById(orderId));
-    }
-
-    @Operation(summary = "Listar órdenes de un usuario")
+    @Operation(
+            summary = "Obtener órdenes de un usuario",
+            description = "Retorna el historial de compras del usuario, con sus productos."
+    )
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<OrderResponse>> getOrdersByUser(
-            @Parameter(description = "ID del usuario", required = true)
-            @PathVariable String userId
+            @PathVariable String userId,
+            @RequestHeader("Authorization") String authHeader
     ) {
-        return ResponseEntity.ok(orderService.getOrdersByUser(userId));
+        List<OrderResponse> orders = orderService.getOrdersByUser(userId);
+        return ResponseEntity.ok(orders);
     }
 
-    @Operation(summary = "Obtener puntos acumulados de un usuario")
+    @Operation(
+            summary = "Obtener puntos actuales del usuario",
+            description = "Retorna el total de puntos disponibles (puntos ganados - puntos gastados)."
+    )
     @GetMapping("/user/{userId}/points")
-    public ResponseEntity<PointsResponse> getUserPoints(
-            @Parameter(description = "ID del usuario", required = true)
-            @PathVariable String userId
+    public ResponseEntity<PointsSummaryResponse> getUserPoints(
+            @PathVariable String userId,
+            @RequestHeader("Authorization") String authHeader
     ) {
-        return ResponseEntity.ok(orderService.getUserPoints(userId));
-    }
-
-    @Operation(summary = "Top compradores (para aplicar 15% de descuento)")
-    @GetMapping("/top-buyers")
-    public ResponseEntity<List<TopBuyerResponse>> getTopBuyers(
-            @Parameter(description = "Cantidad máxima a retornar (máx. 5)")
-            @RequestParam(defaultValue = "5") int limit
-    ) {
-        return ResponseEntity.ok(orderService.getTopBuyers(limit));
-    }
-
-    private String extractToken(String authHeader) {
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7);
-        }
-        throw new RuntimeException("Invalid authorization header");
+        Long points = orderService.getCurrentPoints(userId);
+        PointsSummaryResponse resp = PointsSummaryResponse.builder()
+                .userId(userId)
+                .totalPoints(points)
+                .build();
+        return ResponseEntity.ok(resp);
     }
 }
