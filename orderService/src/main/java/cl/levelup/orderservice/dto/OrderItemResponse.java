@@ -1,14 +1,17 @@
-// order-service/src/main/java/cl/levelup/orderservice/dto/OrderItemResponse.java
 package cl.levelup.orderservice.dto;
 
+import lombok.Builder;
 import lombok.Data;
 
+import java.util.UUID;
+
 @Data
+@Builder
 public class OrderItemResponse {
+    private UUID id;
     private String productId;
-    private String productName;
-    private Long unitPrice;
+    private String name;
+    private String image;
+    private Long price;
     private Integer quantity;
-    private String imagenUrl;
-    private Long subtotal;
 }

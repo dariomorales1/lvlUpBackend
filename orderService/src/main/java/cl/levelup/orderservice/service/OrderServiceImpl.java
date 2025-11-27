@@ -1,123 +1,124 @@
-// order-service/src/main/java/cl/levelup/orderservice/service/OrderServiceImpl.java
 package cl.levelup.orderservice.service;
 
 import cl.levelup.orderservice.client.CartClient;
 import cl.levelup.orderservice.client.UserClient;
-import cl.levelup.orderservice.dto.*;
+import cl.levelup.orderservice.dto.CartItemDto;
+import cl.levelup.orderservice.dto.CartResponseDto;
+import cl.levelup.orderservice.dto.OrderResponse;
+import cl.levelup.orderservice.dto.UserSummaryDto;
 import cl.levelup.orderservice.model.Order;
 import cl.levelup.orderservice.model.OrderItem;
 import cl.levelup.orderservice.repository.OrderRepository;
-import cl.levelup.orderservice.repository.projection.UserTotalProjection;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class OrderServiceImpl implements OrderService {
+
+    private static final int POINTS_DISCOUNT_PERCENT = 15;
+    private static final int EMAIL_DISCOUNT_PERCENT = 20;
 
     private final OrderRepository orderRepository;
     private final CartClient cartClient;
     private final UserClient userClient;
 
-    private static final double TOP_BUYER_DISCOUNT = 0.15;
-    private static final double DUOC_DISCOUNT = 0.20;
-    private static final int TOP_BUYER_LIMIT = 5;
-
     @Override
-    public OrderResponse createOrderFromUserCart(String userId, String authToken) {
+    @Transactional
+    public OrderResponse createOrderFromCart(String userId, boolean usePointsDiscount, String authHeader) {
 
-        // 1) Obtener carrito del usuario
-        CartDto cart = cartClient.getUserCart(userId, authToken);
+        // 1. Obtener usuario
+        Mono<UserSummaryDto> userMono = userClient.getUserById(userId, authHeader);
+        UserSummaryDto user = userMono.block();
+        if (user == null) {
+            throw new IllegalStateException("User not found: " + userId);
+        }
+
+        // 2. Obtener carrito
+        Mono<CartResponseDto> cartMono = cartClient.getUserCart(userId, authHeader);
+        CartResponseDto cart = cartMono.block();
         if (cart == null || cart.getItems() == null || cart.getItems().isEmpty()) {
-            throw new RuntimeException("El carrito está vacío");
+            throw new IllegalStateException("Cart is empty for user: " + userId);
         }
 
-        // 2) Calcular total del carrito
-        long totalAmount = cart.getTotalAmount(); // puede ser en centavos; tú decides la convención
+        long totalAmount = cart.getItems().stream()
+                .mapToLong(ci -> (ci.getUnitPrice() != null ? ci.getUnitPrice() : 0L) *
+                        (ci.getQuantity() != null ? ci.getQuantity() : 0))
+                .sum();
 
-        // 3) Obtener usuario para revisar email
-        UsuarioDto usuario = userClient.getUserById(userId, authToken);
+        Long currentPoints = orderRepository.getCurrentPointsForUser(userId);
+        if (currentPoints == null) currentPoints = 0L;
 
-        // 4) Calcular descuentos
-        double discountPercent = 0.0;
+        boolean isTop5 = isUserInTop5ByPoints(userId);
 
-        if (isTopBuyer(userId)) {
-            discountPercent += TOP_BUYER_DISCOUNT;
+        boolean canApplyPointsDiscount = usePointsDiscount && isTop5 && currentPoints > 0;
+
+        boolean hasDuocEmail = user.getEmail() != null &&
+                user.getEmail().toLowerCase().endsWith("@duocuc.cl");
+
+        int discountPercent = 0;
+        if (canApplyPointsDiscount) {
+            discountPercent += POINTS_DISCOUNT_PERCENT;
+        }
+        if (hasDuocEmail) {
+            discountPercent += EMAIL_DISCOUNT_PERCENT;
         }
 
-        if (usuario != null && usuario.getEmail() != null &&
-                usuario.getEmail().toLowerCase().endsWith("@duocuc.cl")) {
-            discountPercent += DUOC_DISCOUNT;
+        if (discountPercent > 35) {
+            discountPercent = 35;
         }
 
-        // límite máximo 35%
-        if (discountPercent > 0.35) {
-            discountPercent = 0.35;
+        long finalAmount = totalAmount;
+        if (discountPercent > 0) {
+            finalAmount = totalAmount * (100 - discountPercent) / 100;
         }
 
-        long finalAmount = Math.round(totalAmount * (1.0 - discountPercent));
-        if (finalAmount < 0) {
-            finalAmount = 0;
-        }
+        long pointsGranted = finalAmount;
+        long pointsSpent = canApplyPointsDiscount ? currentPoints : 0L;
 
-        // 5) Puntos = monto en pesos (aquí uso directamente totalAmount)
-        long pointsGranted = totalAmount;
-
-        // 6) Mapear a entidad Order + OrderItems
+        // 8. Armar entidad Order + Items
         Order order = new Order();
         order.setUserId(userId);
+        order.setCreatedAt(LocalDateTime.now());
         order.setTotalAmount(totalAmount);
         order.setDiscountPercent(discountPercent);
         order.setFinalAmount(finalAmount);
         order.setPointsGranted(pointsGranted);
+        order.setPointsSpent(pointsSpent);
+        order.setUsedPointsDiscount(canApplyPointsDiscount);
+        order.setUsedEmailDiscount(hasDuocEmail);
 
-        List<OrderItem> orderItems = cart.getItems().stream()
-                .map(ci -> {
-                    OrderItem oi = new OrderItem();
-                    oi.setOrder(order);
-                    oi.setProductId(ci.getProductId());
-                    oi.setProductName(ci.getProductName());
-                    oi.setUnitPrice(ci.getUnitPrice());
-                    oi.setQuantity(ci.getQuantity());
-                    oi.setImagenUrl(ci.getImagenUrl());
-                    oi.setSubtotal(ci.getSubtotal());
-                    return oi;
-                })
+        var orderItems = cart.getItems().stream()
+                .map(ci -> mapCartItemToOrderItem(ci, order))
                 .collect(Collectors.toList());
 
         order.setItems(orderItems);
 
-        // 7) Guardar orden
+        // 9. Guardar orden
         Order saved = orderRepository.save(order);
 
-        // 8) Vaciar carrito
-        cartClient.clearUserCart(userId, authToken);
+        // 10. Vaciar carrito luego de crear orden
+        cartClient.clearUserCart(userId, authHeader).block();
 
-        // 9) Devolver DTO
-        return toResponse(saved);
+        // 11. Devolver DTO
+        return OrderResponse.fromEntity(saved);
     }
 
-    private boolean isTopBuyer(String userId) {
-        List<UserTotalProjection> topUsers =
-                orderRepository.findTopUsers(PageRequest.of(0, TOP_BUYER_LIMIT));
-
-        return topUsers.stream()
-                .anyMatch(u -> userId.equals(u.getUserId()));
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public OrderResponse getOrderById(UUID id) {
-        Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Orden no encontrada"));
-        return toResponse(order);
+    private OrderItem mapCartItemToOrderItem(CartItemDto ci, Order order) {
+        return OrderItem.builder()
+                .order(order)
+                .productId(ci.getProductId())
+                .name(ci.getProductName())
+                .image(ci.getImagenUrl())
+                .price(ci.getUnitPrice() != null ? ci.getUnitPrice() : 0L)
+                .quantity(ci.getQuantity() != null ? ci.getQuantity() : 0)
+                .build();
     }
 
     @Override
@@ -125,57 +126,23 @@ public class OrderServiceImpl implements OrderService {
     public List<OrderResponse> getOrdersByUser(String userId) {
         return orderRepository.findByUserIdOrderByCreatedAtDesc(userId)
                 .stream()
-                .map(this::toResponse)
+                .map(OrderResponse::fromEntity)
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PointsResponse getUserPoints(String userId) {
-        List<Order> orders = orderRepository.findByUserIdOrderByCreatedAtDesc(userId);
-        long totalPoints = orders.stream()
-                .mapToLong(Order::getPointsGranted)
-                .sum();
-        return new PointsResponse(userId, totalPoints);
+    public Long getCurrentPoints(String userId) {
+        Long pts = orderRepository.getCurrentPointsForUser(userId);
+        return pts != null ? pts : 0L;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<TopBuyerResponse> getTopBuyers(int limit) {
-        int realLimit = (limit <= 0 || limit > TOP_BUYER_LIMIT) ? TOP_BUYER_LIMIT : limit;
-
-        return orderRepository.findTopUsers(PageRequest.of(0, realLimit))
-                .stream()
-                .map(p -> new TopBuyerResponse(p.getUserId(), p.getTotalSpent()))
-                .collect(Collectors.toList());
-    }
-
-    // ====== Mapper ======
-
-    private OrderResponse toResponse(Order order) {
-        OrderResponse resp = new OrderResponse();
-        resp.setId(order.getId());
-        resp.setUserId(order.getUserId());
-        resp.setTotalAmount(order.getTotalAmount());
-        resp.setDiscountPercent(order.getDiscountPercent());
-        resp.setFinalAmount(order.getFinalAmount());
-        resp.setPointsGranted(order.getPointsGranted());
-        resp.setCreatedAt(order.getCreatedAt());
-
-        List<OrderItemResponse> items = order.getItems().stream()
-                .map(oi -> {
-                    OrderItemResponse ir = new OrderItemResponse();
-                    ir.setProductId(oi.getProductId());
-                    ir.setProductName(oi.getProductName());
-                    ir.setUnitPrice(oi.getUnitPrice());
-                    ir.setQuantity(oi.getQuantity());
-                    ir.setImagenUrl(oi.getImagenUrl());
-                    ir.setSubtotal(oi.getSubtotal());
-                    return ir;
-                })
-                .collect(Collectors.toList());
-
-        resp.setItems(items);
-        return resp;
+    public boolean isUserInTop5ByPoints(String userId) {
+        List<String> ranking = orderRepository.findUserRankingByPoints();
+        return ranking.stream()
+                .limit(5)
+                .anyMatch(id -> id.equals(userId));
     }
 }

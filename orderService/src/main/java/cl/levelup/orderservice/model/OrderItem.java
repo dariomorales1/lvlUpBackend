@@ -1,46 +1,39 @@
-// order-service/src/main/java/cl/levelup/orderservice/model/OrderItem.java
 package cl.levelup.orderservice.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import lombok.*;
 
 import java.util.UUID;
 
 @Entity
 @Table(name = "order_items")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class OrderItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id", nullable = false)
-    @JsonIgnore
-    private Order order;
-
-    @Column(name = "product_id", nullable = false)
+    @Column(name = "product_id", nullable = false, length = 50)
     private String productId;
 
-    @Column(name = "product_name", nullable = false)
-    private String productName;
+    @Column(name = "product_name", nullable = false, length = 255)
+    private String name;
 
-    // mismo criterio que CartItem (normalmente centavos)
-    @Column(name = "unit_price", nullable = false)
-    private Long unitPrice;
+    @Column(name = "image", length = 500)
+    private String image;
+
+    @Column(name = "price", nullable = false)
+    private Long price;
 
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
-    @Column(name = "imagenurl")
-    private String imagenUrl;
-
-    @Column(name = "subtotal", nullable = false)
-    private Long subtotal;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
 }

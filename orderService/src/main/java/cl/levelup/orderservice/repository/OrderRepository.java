@@ -1,8 +1,6 @@
 package cl.levelup.orderservice.repository;
 
 import cl.levelup.orderservice.model.Order;
-import cl.levelup.orderservice.repository.projection.UserTotalProjection;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -11,13 +9,15 @@ import java.util.UUID;
 
 public interface OrderRepository extends JpaRepository<Order, UUID> {
 
-    @Query("""
-           SELECT o.userId AS userId, SUM(o.finalAmount) AS totalSpent
-           FROM Order o
-           GROUP BY o.userId
-           ORDER BY totalSpent DESC
-           """)
-    List<UserTotalProjection> findTopUsers(Pageable pageable);
-
     List<Order> findByUserIdOrderByCreatedAtDesc(String userId);
+
+    @Query("SELECT COALESCE(SUM(o.pointsGranted) - SUM(o.pointsSpent), 0) " +
+            "FROM Order o WHERE o.userId = :userId")
+    Long getCurrentPointsForUser(String userId);
+
+    @Query("SELECT o.userId " +
+            "FROM Order o " +
+            "GROUP BY o.userId " +
+            "ORDER BY COALESCE(SUM(o.pointsGranted) - SUM(o.pointsSpent), 0) DESC")
+    List<String> findUserRankingByPoints();
 }
