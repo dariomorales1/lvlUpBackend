@@ -9,10 +9,8 @@ public class ResenaResponse {
     private Integer puntuacion;
     private LocalDateTime createdAt;
 
-    // 👉 El usuarioId se puede mantener si quieres usarlo
     private String usuarioId;
 
-    // 👉 Campos nuevos desde UserService
     private String usuarioNombre;
     private String usuarioAvatarUrl;
 

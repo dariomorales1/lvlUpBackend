@@ -36,7 +36,6 @@ public class Resena {
     @JsonIgnore
     private Product product;
 
-    // No se guardan en BD (solo se devuelven al frontend)
     @Transient
     private String usuarioNombre;
 

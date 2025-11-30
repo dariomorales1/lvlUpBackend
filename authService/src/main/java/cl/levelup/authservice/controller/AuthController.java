@@ -146,7 +146,7 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
-    @Operation(hidden = true) // Ocultar este endpoint en Swagger
+    @Operation(hidden = true)
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntime(RuntimeException ex) {
         ErrorResponse error = new ErrorResponse(ex.getMessage());

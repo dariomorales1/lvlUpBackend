@@ -36,8 +36,6 @@ public class Usuario {
     @Column(name = "rol", nullable = false)
     private String rol = "USER";
 
-    // ------- GETTERS & SETTERS -------
-
     public String getId() {
         return id;
     }

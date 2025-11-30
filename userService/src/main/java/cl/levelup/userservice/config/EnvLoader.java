@@ -17,7 +17,7 @@ public class EnvLoader {
         try {
             File envFile = new File(".env");
             if (!envFile.exists()) {
-                System.out.println("⚠️  No existe archivo .env - usando valores por defecto");
+                System.out.println("No existe archivo .env - usando valores por defecto");
                 return;
             }
 
@@ -28,7 +28,6 @@ public class EnvLoader {
                 while ((line = reader.readLine()) != null) {
                     line = line.trim();
 
-                    // Saltar comentarios y líneas vacías
                     if (line.isEmpty() || line.startsWith("#")) continue;
                     if (!line.contains("=")) continue;
 
@@ -36,25 +35,23 @@ public class EnvLoader {
                     String key = parts[0].trim();
                     String value = parts[1].trim();
 
-                    // Quitar comillas si existen
                     if (value.startsWith("\"") && value.endsWith("\"")) {
                         value = value.substring(1, value.length() - 1);
                     }
 
                     envVars.put(key, value);
-                    System.out.println("✅ ENV cargado: " + key + " = " + value);
+                    System.out.println("ENV cargado: " + key + " = " + value);
                 }
             }
 
-            // Cargar variables al sistema
             for (Map.Entry<String, String> entry : envVars.entrySet()) {
                 System.setProperty(entry.getKey(), entry.getValue());
             }
 
-            System.out.println("✅ Archivo .env cargado exitosamente");
+            System.out.println("Archivo .env cargado exitosamente");
 
         } catch (Exception e) {
-            System.err.println("❌ Error cargando .env: " + e.getMessage());
+            System.err.println("Error cargando .env: " + e.getMessage());
         }
     }
 }

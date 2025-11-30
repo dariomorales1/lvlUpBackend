@@ -32,7 +32,6 @@ public class Direccion {
     @Column(name = "pais", nullable = false)
     private String pais;
 
-    // referencia al usuario (FK) - almacenamos el uid de Firebase (String)
     @Column(name = "usuario_id", nullable = false)
     private String usuarioId;
 
@@ -53,7 +52,6 @@ public class Direccion {
         actualizadoEn = OffsetDateTime.now();
     }
 
-    // ----- getters y setters -----
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

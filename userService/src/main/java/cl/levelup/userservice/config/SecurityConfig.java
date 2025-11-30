@@ -1,4 +1,3 @@
-// userService/src/main/java/cl/levelup/userservice/config/SecurityConfig.java
 package cl.levelup.userservice.config;
 
 import org.springframework.context.annotation.Bean;
@@ -25,7 +24,6 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // Swagger UI y OpenAPI endpoints - PERMITIR SIN AUTENTICACIÓN
                         .requestMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
@@ -41,13 +39,10 @@ public class SecurityConfig {
                                 "/"
                         ).permitAll()
 
-                        // Actuator endpoints
                         .requestMatchers("/actuator/**").permitAll()
 
-                        // Endpoints públicos de la aplicación
                         .requestMatchers("/users/public/register").permitAll()
 
-                        // TODOS los demás endpoints requieren autenticación
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

@@ -29,20 +29,19 @@ public class JwtService {
                     .parseSignedClaims(token)
                     .getPayload();
 
-            System.out.println("✅ Token parsed successfully");
-            System.out.println("📋 Claims - Subject: " + claims.getSubject());
-            System.out.println("📋 Claims - Email: " + claims.get("email"));
-            System.out.println("📋 Claims - Rol: " + claims.get("rol"));
-            System.out.println("📋 Claims - Expiration: " + claims.getExpiration());
+            System.out.println("Token success");
+            System.out.println("Subject: " + claims.getSubject());
+            System.out.println("Email: " + claims.get("email"));
+            System.out.println("Rol: " + claims.get("rol"));
+            System.out.println("Expiration: " + claims.getExpiration());
 
-            // Verificar que no esté expirado
             boolean isExpired = claims.getExpiration().before(new Date());
-            System.out.println("⏰ Token expired: " + isExpired);
+            System.out.println("Token expirado: " + isExpired);
 
             return !isExpired;
 
         } catch (Exception e) {
-            System.out.println("❌ Token validation failed: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            System.out.println("Token validacion fallo: " + e.getClass().getSimpleName() + " - " + e.getMessage());
             e.printStackTrace();
             return false;
         }

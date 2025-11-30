@@ -21,8 +21,6 @@ public class CartService {
     private final ProductService productService;
     private final UserService userService;
 
-    // ========= MÉTODOS PARA USUARIOS AUTENTICADOS =========
-
     @Transactional(readOnly = true)
     public Cart getCartByUserId(String userId) {
         return cartRepository.findByUserIdWithItems(userId)
@@ -87,8 +85,6 @@ public class CartService {
         cartRepository.save(cart);
     }
 
-    // ========= MÉTODOS PARA USUARIOS ANÓNIMOS =========
-
     @Transactional(readOnly = true)
     public Cart getCartBySessionId(String sessionId) {
         return cartRepository.findBySessionIdWithItems(sessionId)
@@ -116,8 +112,6 @@ public class CartService {
         cart.getItems().clear();
         cartRepository.save(cart);
     }
-
-    // ========= MIGRACIÓN DE CARRITO =========
 
     @Transactional
     public Cart migrateGuestCartToUser(String sessionId, String userId) {
@@ -152,8 +146,6 @@ public class CartService {
         cartRepository.delete(guestCart);
         return getCartByUserId(userId);
     }
-
-    // ========= MÉTODOS PRIVADOS AUXILIARES =========
 
     private Cart processAddItem(String userId, String sessionId, AddItemRequest request, String authToken) {
         Map<String, Object> productInfo = getProductInfo(request.getProductId(), authToken);

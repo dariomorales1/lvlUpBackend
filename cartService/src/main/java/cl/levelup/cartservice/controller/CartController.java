@@ -5,8 +5,6 @@ import cl.levelup.cartservice.dto.CartResponse;
 import cl.levelup.cartservice.service.CartService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,8 +22,6 @@ import org.springframework.web.bind.annotation.*;
 public class CartController {
 
     private final CartService cartService;
-
-    // ========= USUARIOS AUTENTICADOS =========
 
     @Operation(
             summary = "Obtener carrito de usuario",
@@ -200,8 +196,6 @@ public class CartController {
         }
     }
 
-    // ========= USUARIOS ANÓNIMOS =========
-
     @Operation(
             summary = "Obtener carrito de invitado",
             description = "Retorna el carrito de compras de un usuario anónimo (guest)"
@@ -342,8 +336,6 @@ public class CartController {
         }
     }
 
-    // ========= MIGRACIÓN =========
-
     @Operation(
             summary = "Migrar carrito de invitado a usuario",
             description = "Transfiere todos los items de un carrito de invitado a un usuario autenticado",
@@ -379,8 +371,6 @@ public class CartController {
             return ResponseEntity.badRequest().build();
         }
     }
-
-    // ========= ENDPOINT DE HEALTH =========
 
     @Operation(summary = "Health check", description = "Verifica el estado del servicio de carritos")
     @ApiResponse(responseCode = "200", description = "Servicio funcionando correctamente")

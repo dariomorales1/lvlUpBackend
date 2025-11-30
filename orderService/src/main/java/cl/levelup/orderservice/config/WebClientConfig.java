@@ -1,4 +1,3 @@
-// order-service/src/main/java/cl/levelup/orderservice/config/WebClientConfig.java
 package cl.levelup.orderservice.config;
 
 import org.springframework.context.annotation.Bean;

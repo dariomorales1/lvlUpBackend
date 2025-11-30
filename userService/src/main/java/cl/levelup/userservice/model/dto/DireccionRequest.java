@@ -1,7 +1,6 @@
 package cl.levelup.userservice.model.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public class DireccionRequest {
@@ -26,7 +25,6 @@ public class DireccionRequest {
 
     private String pais;
 
-    // getters & setters
 
     public String getAlias() { return alias; }
     public void setAlias(String alias) { this.alias = alias; }

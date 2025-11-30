@@ -9,7 +9,6 @@ import cl.levelup.userservice.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,7 +27,6 @@ public class DireccionServiceImpl implements DireccionService {
     @Override
     @Transactional(readOnly = true)
     public List<DireccionResponse> listarPorUsuario(String usuarioId) {
-        // opcional: validar existencia del usuario
         if (!usuarioRepository.existsById(usuarioId)) {
             throw new RuntimeException("Usuario no encontrado");
         }
@@ -52,7 +50,6 @@ public class DireccionServiceImpl implements DireccionService {
         d.setRegion(request.getRegion());
         d.setPais(request.getPais() != null ? request.getPais() : "Chile");
         d.setUsuarioId(usuario.getId());
-        // creadoEn y actualizadoEn se llenan por @PrePersist
 
         Direccion guardada = direccionRepository.save(d);
         return toResponse(guardada);
@@ -76,7 +73,6 @@ public class DireccionServiceImpl implements DireccionService {
             throw new RuntimeException("No autorizado para actualizar esta dirección");
         }
 
-        // Actualizar sólo campos que vienen (evitar nullear)
         if (request.getAlias() != null) d.setAlias(request.getAlias());
         if (request.getCalle() != null) d.setCalle(request.getCalle());
         if (request.getNumero() != null) d.setNumero(request.getNumero());

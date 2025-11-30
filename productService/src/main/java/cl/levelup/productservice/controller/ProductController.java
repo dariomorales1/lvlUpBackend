@@ -157,7 +157,6 @@ public class ProductController {
 
                 if (imagen != null && !imagen.isEmpty()) {
                     if (imagen.startsWith("http://") || imagen.startsWith("https://")) {
-                        // Ya es una URL completa, no hacer nada
                     } else if (!imagen.startsWith(baseUrl + categoryPath)) {
                         imagen = baseUrl + categoryPath + imagen;
                     }
@@ -248,7 +247,6 @@ public class ProductController {
             String imagen = productRequest.getImagenUrl();
 
             if (imagen.startsWith("http://") || imagen.startsWith("https://")) {
-                // Ya es una URL completa, no hacer nada
             } else if (!imagen.startsWith(baseUrl + categoryPath)) {
                 productRequest.setImagenUrl(baseUrl + categoryPath + imagen);
             } else {
@@ -266,8 +264,6 @@ public class ProductController {
             return ResponseEntity.ok(new MessageResponse("Product fully updated"));
         }
     }
-
-    // ============ RESEÑAS ============
 
     @Operation(
             summary = "Obtener reseñas de producto",

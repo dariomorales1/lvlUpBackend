@@ -12,13 +12,11 @@ import java.util.UUID;
 @Repository
 public interface CartRepository extends JpaRepository<Cart, UUID> {
 
-    // Para usuarios autenticados
     Optional<Cart> findByUserId(String userId);
 
     @Query("SELECT c FROM Cart c LEFT JOIN FETCH c.items WHERE c.userId = :userId")
     Optional<Cart> findByUserIdWithItems(@Param("userId") String userId);
 
-    // NUEVO: Para usuarios anónimos
     Optional<Cart> findBySessionId(String sessionId);
 
     @Query("SELECT c FROM Cart c LEFT JOIN FETCH c.items WHERE c.sessionId = :sessionId")

@@ -14,7 +14,6 @@ public class UsuarioResponse {
     private OffsetDateTime creadoEn;
     private OffsetDateTime actualizadoEn;
 
-    // ------- CONSTRUCTORES -------
     public UsuarioResponse() {}
 
     public UsuarioResponse(String id, String email, String nombre, LocalDate fechaNacimiento,
@@ -31,7 +30,6 @@ public class UsuarioResponse {
         this.actualizadoEn = actualizadoEn;
     }
 
-    // ------- GETTERS & SETTERS -------
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 

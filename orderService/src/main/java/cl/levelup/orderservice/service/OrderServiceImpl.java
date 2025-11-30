@@ -33,14 +33,12 @@ public class OrderServiceImpl implements OrderService {
     @Transactional
     public OrderResponse createOrderFromCart(String userId, boolean usePointsDiscount, String authHeader) {
 
-        // 1. Obtener usuario
         Mono<UserSummaryDto> userMono = userClient.getUserById(userId, authHeader);
         UserSummaryDto user = userMono.block();
         if (user == null) {
             throw new IllegalStateException("User not found: " + userId);
         }
 
-        // 2. Obtener carrito
         Mono<CartResponseDto> cartMono = cartClient.getUserCart(userId, authHeader);
         CartResponseDto cart = cartMono.block();
         if (cart == null || cart.getItems() == null || cart.getItems().isEmpty()) {
@@ -82,7 +80,6 @@ public class OrderServiceImpl implements OrderService {
         long pointsGranted = finalAmount;
         long pointsSpent = canApplyPointsDiscount ? currentPoints : 0L;
 
-        // 8. Armar entidad Order + Items
         Order order = new Order();
         order.setUserId(userId);
         order.setCreatedAt(LocalDateTime.now());
@@ -100,13 +97,10 @@ public class OrderServiceImpl implements OrderService {
 
         order.setItems(orderItems);
 
-        // 9. Guardar orden
         Order saved = orderRepository.save(order);
 
-        // 10. Vaciar carrito luego de crear orden
         cartClient.clearUserCart(userId, authHeader).block();
 
-        // 11. Devolver DTO
         return OrderResponse.fromEntity(saved);
     }
 

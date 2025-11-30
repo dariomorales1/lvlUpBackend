@@ -1,4 +1,3 @@
-// userService/src/main/java/cl/levelup/userservice/controller/UsuarioController.java
 package cl.levelup.userservice.controller;
 
 import cl.levelup.userservice.model.dto.*;
@@ -205,7 +204,6 @@ public class UsuarioController {
                 .body(creado);
     }
 
-    // ========= DIRECCIONES =========
 
     @Operation(summary = "Listar direcciones", description = "Obtiene todas las direcciones del usuario actual")
     @ApiResponses({

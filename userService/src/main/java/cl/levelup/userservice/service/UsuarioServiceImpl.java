@@ -40,14 +40,12 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     public UsuarioResponse createFromRequest(UsuarioRequest request, String uidFirebase) {
-        // Si ya existe, devolverlo
         if (usuarioRepository.existsById(uidFirebase)) {
             Usuario existente = usuarioRepository.findById(uidFirebase)
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
             return toResponse(existente);
         }
 
-        // Validar email duplicado
         if (usuarioRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("El email ya está en uso");
         }
@@ -59,7 +57,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuario.setFechaNacimiento(request.getFechaNacimiento());
         usuario.setAvatarUrl(request.getAvatarUrl());
         usuario.setActivo(true);
-        usuario.setRol("USER"); // Rol por defecto
+        usuario.setRol("USER");
         usuario.setCreadoEn(OffsetDateTime.now());
         usuario.setActualizadoEn(OffsetDateTime.now());
 
@@ -72,7 +70,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // Evitar emails duplicados
         usuarioRepository.findByEmail(request.getEmail())
                 .filter(existing -> !existing.getId().equals(id))
                 .ifPresent(existing -> {
@@ -112,18 +109,16 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     public UsuarioResponse createFromPublicRequest(UsuarioPublicRequest request) {
-        // Validar email duplicado
         if (usuarioRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("El email ya está en uso");
         }
 
-        // Validar que no exista ya el UID de Firebase
         if (usuarioRepository.existsById(request.getFirebaseUid())) {
             throw new RuntimeException("El usuario ya existe en la base de datos");
         }
 
         Usuario usuario = new Usuario();
-        usuario.setId(request.getFirebaseUid()); // ← Usar UID de Firebase
+        usuario.setId(request.getFirebaseUid());
         usuario.setEmail(request.getEmail());
         usuario.setNombre(request.getNombre());
         usuario.setFechaNacimiento(request.getFechaNacimiento());
@@ -137,7 +132,6 @@ public class UsuarioServiceImpl implements UsuarioService {
         return toResponse(guardado);
     }
 
-    // ========= NUEVO: actualizar solo el avatar =========
     @Override
     public UsuarioResponse actualizarAvatar(String id, String avatarUrl) {
         Usuario usuario = usuarioRepository.findById(id)
@@ -149,5 +143,4 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario guardado = usuarioRepository.save(usuario);
         return toResponse(guardado);
     }
-    // ====================================================
 }

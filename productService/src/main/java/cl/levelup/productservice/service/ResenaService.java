@@ -28,13 +28,11 @@ public class ResenaService {
     @Autowired
     private UsuarioClient usuarioClient;
 
-    // 🔹 Obtener reseñas de un producto (enriquecidas con datos del usuario)
     public List<Resena> getResenasByProductCode(String productCode) {
         List<Resena> resenas = resenaRepository.findByProduct_Codigo(productCode);
         return enriquecerConUsuario(resenas);
     }
 
-    // 🔹 Alias usado desde el controller para el producto
     public List<Resena> getResenasEnriquecidas(String productCode) {
         return getResenasByProductCode(productCode);
     }
@@ -53,7 +51,6 @@ public class ResenaService {
         return resenas;
     }
 
-    // 🔹 Crear nueva reseña para un producto
     public Resena addResena(String productCode, ResenaRequest request) {
         Product product = productRepository.findByCodigo(productCode);
         if (product == null) {
@@ -82,12 +79,10 @@ public class ResenaService {
 
         Resena saved = resenaRepository.save(resena);
 
-        // Enriquecer solo esta reseña
         enriquecerConUsuario(List.of(saved));
         return saved;
     }
 
-    // 🔹 Actualizar reseña existente
     public Resena updateResena(String productCode, Long resenaId, ResenaRequest request) {
         Resena existing = resenaRepository.findByIdAndProduct_Codigo(resenaId, productCode)
                 .orElseThrow(() -> new IllegalArgumentException(
@@ -112,7 +107,6 @@ public class ResenaService {
         return saved;
     }
 
-    // 🔹 Eliminar reseña
     public void deleteResena(String productCode, Long resenaId) {
         Resena existing = resenaRepository.findByIdAndProduct_Codigo(resenaId, productCode)
                 .orElseThrow(() -> new IllegalArgumentException(

@@ -1,4 +1,3 @@
-// authService/src/main/java/cl/levelup/authservice/config/SecurityConfig.java
 package cl.levelup.authservice.config;
 
 import org.springframework.context.annotation.Bean;
@@ -18,7 +17,6 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        // Swagger UI endpoints
                         .requestMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
@@ -27,11 +25,9 @@ public class SecurityConfig {
                                 "/swagger-resources/**"
                         ).permitAll()
 
-                        // Auth endpoints públicos
                         .requestMatchers("/auth/**", "/actuator/health").permitAll()
                         .requestMatchers("/admin/delete-user").permitAll()
 
-                        // Todos los demás endpoints requieren autenticación
                         .anyRequest().authenticated()
                 );
 

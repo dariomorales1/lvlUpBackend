@@ -1,4 +1,3 @@
-// userService/src/main/java/cl/levelup/userservice/config/JwtAuthenticationFilter.java
 package cl.levelup.userservice.config;
 
 import cl.levelup.userservice.service.JwtService;
@@ -29,9 +28,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         boolean shouldNotFilter = isPublicPath(path);
 
         if (shouldNotFilter) {
-            System.out.println("✅ Skipping JWT filter for public path: " + path);
+            System.out.println("Saltando JWT: " + path);
         } else {
-            System.out.println("🔐 Applying JWT filter for path: " + path);
+            System.out.println("Aplicando JWT: " + path);
         }
 
         return shouldNotFilter;
@@ -45,47 +44,42 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         String header = request.getHeader("Authorization");
-        System.out.println("🔐 Authorization header: " + header);
+        System.out.println("Autorizacion header: " + header);
 
-        // Para endpoints que requieren auth, el header es obligatorio
         if (header == null || !header.startsWith("Bearer ")) {
-            System.out.println("❌ Missing or invalid Authorization header");
+            System.out.println("Error o header Invalido");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("Missing or invalid Authorization header");
+            response.getWriter().write("Error Authorization header");
             return;
         }
 
         String token = header.substring(7);
-        System.out.println("🔐 Token recibido: " + (token.length() > 20 ? token.substring(0, 20) + "..." : token));
+        System.out.println("Token recibido: " + (token.length() > 20 ? token.substring(0, 20) + "..." : token));
 
         try {
-            System.out.println("🔐 Validando token JWT...");
+            System.out.println("Validando token JWT...");
 
-            // Validar token JWT
             if (!jwtService.validateToken(token)) {
-                System.out.println("❌ Token inválido o expirado");
+                System.out.println("Token inválido o expirado");
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Invalid or expired JWT token");
+                response.getWriter().write("Ivalido o expiradi JWT token");
                 return;
             }
 
-            // Extraer información del token
             String userId = jwtService.extractUserId(token);
             String email = jwtService.extractEmail(token);
             String rol = jwtService.extractRol(token);
 
-            System.out.println("✅ JWT Validado - User: " + userId + ", Email: " + email + ", Rol: " + rol);
+            System.out.println("JWT Validado - User: " + userId + ", Email: " + email + ", Rol: " + rol);
 
-            // Crear autenticación
             UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(userId, null, List.of());
 
-            // Establecer en contexto de seguridad
             SecurityContextHolder.getContext().setAuthentication(auth);
-            System.out.println("✅ Autenticación establecida en SecurityContext");
+            System.out.println("Autenticación establecida en SecurityContext");
 
         } catch (Exception e) {
-            System.out.println("❌ JWT validation error: " + e.getMessage());
+            System.out.println("JWT Error Validacion: " + e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Token validation failed: " + e.getMessage());
             return;
@@ -94,9 +88,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    /**
-     * Verifica si el path es público (no requiere autenticación)
-     */
     private boolean isPublicPath(String path) {
         return path.startsWith("/swagger-ui") ||
                 path.startsWith("/v3/api-docs") ||

@@ -51,15 +51,11 @@ public class SupabaseStorageService {
 
         String sanitizedCategory = categoria.trim();
 
-        // 🔴 Importante: nombre SIN espacios (todo junto)
         String sanitizedName = nombreProducto.trim();
-        String normalizedName = sanitizedName.replaceAll("\\s+", ""); // "Switch 2" -> "Switch2"
+        String normalizedName = sanitizedName.replaceAll("\\s+", "");
 
-        // Nombre de archivo: {NombreProductoSinEspacios}.jpg
         String fileName = normalizedName + ".jpg";
 
-        // Ruta final dentro del bucket
-        // products/{Categoria}/{NombreProductoSinEspacios}.jpg
         String objectPath = String.format("%s/%s/%s",
                 productFolder,
                 sanitizedCategory,
@@ -82,7 +78,7 @@ public class SupabaseStorageService {
                         .path("/object/{bucket}/{path}")
                         .build(bucket, objectPath))
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + serviceRoleKey)
-                .header("x-upsert", "true") // permite sobreescribir imagen del producto
+                .header("x-upsert", "true")
                 .contentType(MediaType.parseMediaType(
                         file.getContentType() != null ? file.getContentType() : "image/jpeg"
                 ))
@@ -95,8 +91,6 @@ public class SupabaseStorageService {
                 })
                 .block();
 
-        // Construimos la URL publica:
-        // {supabase.url}/storage/v1/object/public/{bucket}/{objectPath}
         String publicUrl = String.format(
                 "%s/storage/v1/object/public/%s/%s",
                 supabaseUrl,
@@ -109,9 +103,6 @@ public class SupabaseStorageService {
         return publicUrl;
     }
 
-    /**
-     * Elimina un objeto en Supabase Storage a partir de su URL publica.
-     */
     public void deleteByPublicUrl(String publicUrl) {
         if (publicUrl == null || publicUrl.isBlank()) {
             return;
@@ -119,7 +110,7 @@ public class SupabaseStorageService {
 
         try {
             URI uri = URI.create(publicUrl);
-            String path = uri.getPath(); // ej: /storage/v1/object/public/levelup_files/products/Consolas/Switch2.jpg
+            String path = uri.getPath();
 
             String marker = "/storage/v1/object/public/" + bucket + "/";
             int idx = path.indexOf(marker);
@@ -128,7 +119,7 @@ public class SupabaseStorageService {
                 return;
             }
 
-            String objectPath = path.substring(idx + marker.length()); // products/Consolas/Switch2.jpg
+            String objectPath = path.substring(idx + marker.length());
 
             log.info("Eliminando objeto de Supabase Storage. objectPath='{}'", objectPath);
 

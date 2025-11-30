@@ -13,7 +13,6 @@ import java.util.UUID;
 @Repository
 public interface CartItemRepository extends JpaRepository<CartItem, UUID> {
 
-    // Para usuarios autenticados
     @Query("SELECT ci FROM CartItem ci WHERE ci.cart.userId = :userId AND ci.productId = :productId")
     Optional<CartItem> findByUserIdAndProductId(@Param("userId") String userId,
                                                 @Param("productId") String productId);
@@ -23,7 +22,6 @@ public interface CartItemRepository extends JpaRepository<CartItem, UUID> {
     void deleteByUserIdAndProductId(@Param("userId") String userId,
                                     @Param("productId") String productId);
 
-    // NUEVO: Para usuarios anónimos
     @Query("SELECT ci FROM CartItem ci WHERE ci.cart.sessionId = :sessionId AND ci.productId = :productId")
     Optional<CartItem> findBySessionIdAndProductId(@Param("sessionId") String sessionId,
                                                    @Param("productId") String productId);

@@ -20,7 +20,6 @@ public class UsuarioPublicRequest {
     private String avatarUrl;
     private String rol;
 
-    // Getters y Setters
 
     public String getFirebaseUid() {
         return firebaseUid;

@@ -36,16 +36,12 @@ public class SupabaseStorageService {
         this.webClientBuilder = webClientBuilder;
     }
 
-    /**
-     * Sube un archivo al Storage de Supabase y devuelve la URL publica.
-     */
     public String uploadAvatar(String userId, MultipartFile file) throws IOException {
 
         if (file.isEmpty()) {
             throw new IllegalArgumentException("El archivo esta vacio");
         }
 
-        // Obtener extension del archivo
         String originalName = file.getOriginalFilename();
         String extension = "jpg";
 
@@ -53,7 +49,6 @@ public class SupabaseStorageService {
             extension = originalName.substring(originalName.lastIndexOf('.') + 1);
         }
 
-        // Ruta final dentro del bucket: fotoPerfil/{userId}/Foto_Perfil.ext
         String objectPath = String.format("%s/%s/Foto_Perfil.%s",
                 avatarFolder, userId, extension
         );
@@ -62,18 +57,16 @@ public class SupabaseStorageService {
 
         byte[] fileBytes = file.getBytes();
 
-        // Cliente Web apuntando a /storage/v1
         WebClient client = webClientBuilder
                 .baseUrl(supabaseUrl + "/storage/v1")
                 .build();
 
-        // POST al endpoint de Storage
         client.post()
                 .uri(uriBuilder -> uriBuilder
                         .path("/object/{bucket}/{path}")
                         .build(bucket, objectPath))
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + serviceRoleKey)
-                .header("x-upsert", "true") // permite sobreescribir
+                .header("x-upsert", "true")
                 .contentType(MediaType.parseMediaType(
                         file.getContentType() != null ? file.getContentType() : "image/jpeg"))
                 .bodyValue(fileBytes)
@@ -85,7 +78,6 @@ public class SupabaseStorageService {
                 })
                 .block();
 
-        // Construimos la URL publica
         String publicUrl = String.format(
                 "%s/storage/v1/object/public/%s/%s",
                 supabaseUrl, bucket, objectPath
@@ -96,9 +88,6 @@ public class SupabaseStorageService {
         return publicUrl;
     }
 
-    /**
-     * Elimina un avatar de Supabase Storage usando su URL publica.
-     */
     public void deleteByPublicUrl(String publicUrl) {
         if (publicUrl == null || publicUrl.isBlank()) {
             return;

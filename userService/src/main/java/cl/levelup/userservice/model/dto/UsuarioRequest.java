@@ -3,7 +3,6 @@ package cl.levelup.userservice.model.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 
 public class UsuarioRequest {
 
@@ -21,7 +20,6 @@ public class UsuarioRequest {
     private Boolean activo;
 
 
-    // ------- GETTERS & SETTERS -------
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
 
