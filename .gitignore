@@ -31,4 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Docker & Secrets ###
+.env
+.env.local
 firebase/
+firebase/service-account.json
+firebase/*.json
+**/service-account*.json

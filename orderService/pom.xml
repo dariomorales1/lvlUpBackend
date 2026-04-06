@@ -9,8 +9,8 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>productService</artifactId>
-    <name>productService</name>
+    <artifactId>orderService</artifactId>
+    <name>orderService</name>
 
     <dependencies>
 

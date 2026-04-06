@@ -235,6 +235,65 @@ Autenticación robusta con Firebase + JWT
 Documentación completa con Swagger
 Integración con almacenamiento externo (Supabase)
 
-📄 Licencia
+## Despliegue con Docker Compose
 
-Proyecto académico – uso exclusivamente educativo.
+### Requisitos
+- Docker y Docker Compose instalados
+- Archivo `firebase/service-account.json` (credenciales Firebase Admin SDK)
+
+### Pasos
+
+1. **Copiar variables de entorno**
+   ```bash
+   cp .env.example .env
+   ```
+   Editar `.env` con los valores reales (DB_HOST, DB_PASSWORD, JWT_SECRET, SUPABASE_URL, etc.)
+
+2. **Verificar archivo Firebase**
+   ```bash
+   ls firebase/service-account.json
+   ```
+
+3. **Construir y levantar**
+   ```bash
+   docker-compose up -d --build
+   ```
+
+4. **Verificar estado**
+   ```bash
+   docker-compose ps
+   ```
+
+5. **Acceder a la API**
+   - Gateway: http://localhost:8080
+   - Swagger UI: http://localhost:8080/swagger-ui.html
+
+6. **Ver logs**
+   ```bash
+   docker-compose logs -f api-gateway
+   docker-compose logs -f auth-service
+   ```
+
+7. **Detener servicios**
+   ```bash
+   docker-compose down
+   ```
+
+### Arquitectura Docker
+
+| Contenedor       | Puerto interno | Expuesto al host |
+|------------------|---------------|-------------------|
+| api-gateway      | 8080          | Si (8080)         |
+| auth-service     | 8081          | No                |
+| user-service     | 8082          | No                |
+| product-service  | 8083          | No                |
+| cart-service     | 8084          | No                |
+| order-service    | 8085          | No                |
+
+Solo el API Gateway expone puerto al host. Los demas servicios se comunican internamente via la red Docker `lvlup-network`.
+
+---
+
+Proyecto academico para la asignatura ISY1101 - Introduccion a Herramientas DevOps, Duoc UC.
+
+Licencia: uso exclusivamente educativo.

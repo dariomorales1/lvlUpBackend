@@ -55,27 +55,27 @@ spring:
                     replacement: /actuator/${path}
 
             - id: authService
-              uri: http://localhost:8081
+              uri: ${AUTH_SERVICE_URL:http://localhost:8081}
               predicates:
                 - Path=/auth/**
 
             - id: userService
-              uri: http://localhost:8082
+              uri: ${USER_SERVICE_URL:http://localhost:8082}
               predicates:
                 - Path=/users/**
 
             - id: productService
-              uri: http://localhost:8083
+              uri: ${PRODUCT_SERVICE_URL:http://localhost:8083}
               predicates:
                 - Path=/products/**
 
             - id: cartService
-              uri: http://localhost:8084
+              uri: ${CART_SERVICE_URL:http://localhost:8084}
               predicates:
                 - Path=/carts/**
 
             - id: orderService
-              uri: http://localhost:8085
+              uri: ${ORDER_SERVICE_URL:http://localhost:8085}
               predicates:
                 - Path=/orders/**
 

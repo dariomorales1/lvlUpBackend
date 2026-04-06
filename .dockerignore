@@ -1,0 +1,12 @@
+target/
+.idea/
+.mvn/
+.git/
+*.iml
+README.md
+.env
+.env.local
+.env.example
+*.log
+node_modules/
+.vscode/
